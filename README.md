@@ -1,8 +1,10 @@
 # README #
 
+Optimal Loop Direction
+
 ### What is this repository for? ###
 
-* H2C reads and writes sensors attached to the Beaglebone Black.
+* OLD reads and writes sensors attached to the Beaglebone Black.
 * It utilizes the C++ language and BlackLib v3 (http://blacklib.yigityuce.com/)
 * Version 0.0
 
