@@ -4,13 +4,14 @@ Optimal Loop Direction
 
 ### What is this repository for? ###
 
-* OLD reads and writes sensors attached to the Beaglebone Black.
-* It utilizes the C++ language and BlackLib v3 (http://blacklib.yigityuce.com/)
+* Raspberry Pi 3 is connected to an Arduino Uno, which is connected to several sensors
+* OLD reads and writes sensor data
+* Raspberry runs a web site, which uses python to send messages over the Serial channel to Arduino
 * Version 0.0
 
 ### How do I get set up? ###
 
-* Connect to the Beaglebone via ssh beebee.hopto.org
+* 
 
 ### Who do I talk to? ###
 

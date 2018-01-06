@@ -1,0 +1,53 @@
+:root {
+	--mdc-theme-primary: black;
+}
+.mdc-grid-tile {
+	--mdc-grid-list-tile-width: 300px;
+}
+.sensor-card-container {
+	align-content: left;
+	display: flex;
+	flex-flow: row wrap;
+	justify-content: left;
+}
+.sensor-card-container .sensor-card {
+	height: 250px;
+	margin: 12px;
+	width: 250px;
+}
+.sensor-card .sensor-card__header {
+	background-color: black;
+	padding: 16px;
+	position: relative;
+}
+.sensor-card .sensor-card__footer {
+	background-color: lightgreen;
+	padding: 4px;
+	position: relative;
+}
+.sensor-card .mdc-card__primary {
+	text-align: center;
+	padding-bottom: 8px;
+}
+.sensor-card .sensor-card__measurement {
+	margin: auto;
+}
+.sensor-card .sensor-card__value {
+	font-size: 3rem;
+	font-weight: 700;
+}
+.sensor-card .sensor-card__unit {
+	font-size: 0.85rem;
+	font-weight: 400;
+}
+.sensor-card-slider {
+	/*display: none;*/
+}
+
+.sensor-card-button {
+	display: none;
+}
+
+sensor-card-form-field {
+	float: right;
+}
