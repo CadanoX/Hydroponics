@@ -1,12 +1,11 @@
+"use strict";
 
-		
-		let {MDCSlider} = mdc.slider;
-		"use strict";
 (function ()
 {
 	// constructor
 	function Card(div, title, unit, valueMin, valueMax)
 	{
+		//let value = null;
 		let containerDiv = div;
 		
 		let card = document.createElement("div");
@@ -18,6 +17,7 @@
 		let buttonDiv = card.querySelector(".sensor-card-button");
 		let sliderDiv = card.querySelector(".sensor-card-slider");
 		let outputDiv = card.querySelector(".sensor-card-form-field");
+		let valueDiv = card.querySelector(".sensor-card__value");
 		let slider;
 		
 		// hide slider, show button -- this needs to be delayed, to make positioning and sizes right
@@ -65,6 +65,20 @@
 		
 		this.get = function() { return card; }
 		this.getSliderValue = function() { return slider.value; }
+
+		this.setValue = function(newValue)
+		{
+			let val = Number.parseInt(newValue);
+			if (Number.isNaN(val)) {
+				console.log("value is not a number");
+				return;
+			}
+			if (val < valueMin || val > valueMax) {
+				console.log("value is out of range");
+				return;
+			}
+			valueDiv.innerHTML = val;
+		}
 	};
 
 	// private shared functions
@@ -91,7 +105,7 @@
 		
 			let cardValue = document.createElement("span");
 			cardValue.classList = "sensor-card__value";
-			cardValue.innerHTML = startValue;
+			cardValue.innerHTML = "-";
 			cardMeasurement.appendChild(cardValue);
 			
 			let cardUnit = document.createElement("span");

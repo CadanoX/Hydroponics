@@ -1,3 +1,22 @@
+getNewMeasurements()
+{
+	var xhr = new XMLHttpRequest();
+	xhr.open('GET', 'serial.php');
+
+	// Track the state changes of the request.
+	xhr.onreadystatechange = function () {
+		var DONE = 4; // readyState 4 means the request is done.
+		var OK = 200; // status 200 is a successful return.
+		if (xhr.readyState === DONE) {
+			if (xhr.status === OK) {
+				console.log(xhr.responseText); // 'This is the output.'
+			} else {
+				console.log('Error: ' + xhr.status); // An error occurred during the request.
+			}
+		}
+	};
+}
+
 document.addEventListener("DOMContentLoaded", function(event)
 {
 	let cardContainer = document.getElementById('mainCardContainer');
@@ -14,6 +33,12 @@ document.addEventListener("DOMContentLoaded", function(event)
 	cardTempAir.get().addEventListener('valueChanged', function(e) {
 		console.log(cardTempAir.getSliderValue());
 	});
+	
+	setInterval(function() {
+		let ran = Math.random()*100;
+		cardTempAir.setValue(ran);
+		getNewMeasurements();
+	}, 1000);
 	
 	const MDCToolbar = mdc.toolbar.MDCToolbar;
 	const MDCToolbarFoundation = mdc.toolbar.MDCToolbarFoundation;
