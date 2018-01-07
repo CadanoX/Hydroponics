@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", function(event)
 		//cardTempAir.setValue(ran);
 		
 		getNewMeasurements();
-	}, 5000);
+	}, 2000);
 	
 	const MDCToolbar = mdc.toolbar.MDCToolbar;
 	const MDCToolbarFoundation = mdc.toolbar.MDCToolbarFoundation;

@@ -73,10 +73,13 @@
 				console.log("value is not a number");
 				return;
 			}
+			/* Test if the value is within the adjustable range?
+			No. Just show the value that is given by the sensor. Take measures somewhere else
 			if (val < valueMin || val > valueMax) {
 				console.log("value is out of range");
 				return;
 			}
+			*/
 			valueDiv.innerHTML = val;
 		}
 	};
