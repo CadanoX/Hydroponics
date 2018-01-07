@@ -1,38 +1,3 @@
-function getNewMeasurements()
-{
-	var xhr = new XMLHttpRequest();
-	xhr.open('GET', 'serial.php', true);
-
-	// Track the state changes of the request.
-	xhr.onreadystatechange = function () {
-		var DONE = 4; // readyState 4 means the request is done.
-		var OK = 200; // status 200 is a successful return.
-		if (xhr.readyState === DONE) {
-			if (xhr.status === OK) {
-				//console.log(xhr.responseText); // 'This is the output.'
-				let measures = null;
-				try {
-					measures = JSON.parse(xhr.responseText);
-				}
-				catch(e) {
-					console.log(e);
-				}
-				if (measures)
-				{
-					cardTempWater.setValue(measures.WaterTemp);
-					cardTempAir.setValue(measures.Temp);
-					cardEC.setValue(measures.EC);
-					cardHumidity.setValue(measures.Humidity);
-				}
-			} else {
-				console.log('Error: ' + xhr.status); // An error occurred during the request.
-			}
-		}
-	};
-	
-	xhr.send();
-}
-
 document.addEventListener("DOMContentLoaded", function(event)
 {
 	let cardContainer = document.getElementById('mainCardContainer');
@@ -49,6 +14,41 @@ document.addEventListener("DOMContentLoaded", function(event)
 	cardTempAir.get().addEventListener('valueChanged', function(e) {
 		console.log(cardTempAir.getSliderValue());
 	});
+	
+	function getNewMeasurements()
+	{
+		var xhr = new XMLHttpRequest();
+		xhr.open('GET', 'serial.php', true);
+
+		// Track the state changes of the request.
+		xhr.onreadystatechange = function () {
+			var DONE = 4; // readyState 4 means the request is done.
+			var OK = 200; // status 200 is a successful return.
+			if (xhr.readyState === DONE) {
+				if (xhr.status === OK) {
+					//console.log(xhr.responseText); // 'This is the output.'
+					let measures = null;
+					try {
+						measures = JSON.parse(xhr.responseText);
+					}
+					catch(e) {
+						console.log(e);
+					}
+					if (measures)
+					{
+						cardTempWater.setValue(measures.WaterTemp);
+						cardTempAir.setValue(measures.Temp);
+						cardEC.setValue(measures.EC);
+						cardHumidity.setValue(measures.Humidity);
+					}
+				} else {
+					console.log('Error: ' + xhr.status); // An error occurred during the request.
+				}
+			}
+		};
+		
+		xhr.send();
+	}
 	
 	setInterval(function() {
 		// test setValue
