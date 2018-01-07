@@ -1,7 +1,7 @@
 function getNewMeasurements()
 {
 	var xhr = new XMLHttpRequest();
-	xhr.open('GET', 'serial.php');
+	xhr.open('GET', 'serial.php', true);
 
 	// Track the state changes of the request.
 	xhr.onreadystatechange = function () {
@@ -9,7 +9,15 @@ function getNewMeasurements()
 		var OK = 200; // status 200 is a successful return.
 		if (xhr.readyState === DONE) {
 			if (xhr.status === OK) {
-				console.log(xhr.responseText); // 'This is the output.'
+				//console.log(xhr.responseText); // 'This is the output.'
+				let measures = JSON.parse(xhr.responseText);
+				if (measures)
+				{
+					cardTempWater.setValue(measures.WaterTemp);
+					cardTempAir.setValue(measures.Temp);
+					cardEC.setValue(measures.EC);
+					cardHumidity.setValue(measures.Humidity);
+				}
 			} else {
 				console.log('Error: ' + xhr.status); // An error occurred during the request.
 			}
