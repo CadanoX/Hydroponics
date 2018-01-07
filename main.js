@@ -1,4 +1,4 @@
-getNewMeasurements()
+function getNewMeasurements()
 {
 	var xhr = new XMLHttpRequest();
 	xhr.open('GET', 'serial.php');
@@ -15,6 +15,8 @@ getNewMeasurements()
 			}
 		}
 	};
+	
+	xhr.send();
 }
 
 document.addEventListener("DOMContentLoaded", function(event)
@@ -35,10 +37,12 @@ document.addEventListener("DOMContentLoaded", function(event)
 	});
 	
 	setInterval(function() {
-		let ran = Math.random()*100;
-		cardTempAir.setValue(ran);
+		// test setValue
+		//let ran = Math.random()*100;
+		//cardTempAir.setValue(ran);
+		
 		getNewMeasurements();
-	}, 1000);
+	}, 5000);
 	
 	const MDCToolbar = mdc.toolbar.MDCToolbar;
 	const MDCToolbarFoundation = mdc.toolbar.MDCToolbarFoundation;
