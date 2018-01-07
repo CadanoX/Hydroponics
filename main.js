@@ -10,7 +10,13 @@ function getNewMeasurements()
 		if (xhr.readyState === DONE) {
 			if (xhr.status === OK) {
 				//console.log(xhr.responseText); // 'This is the output.'
-				let measures = JSON.parse(xhr.responseText);
+				let measures = null;
+				try {
+					measures = JSON.parse(xhr.responseText);
+				}
+				catch(e) {
+					console.log(e);
+				}
 				if (measures)
 				{
 					cardTempWater.setValue(measures.WaterTemp);
