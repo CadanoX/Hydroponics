@@ -1,6 +1,6 @@
 import serial
 
-arduino = serial.Serial('/dev/ttyACM0',9600, timeout = 2)
+arduino = serial.Serial('/dev/ttyACM0',9600, timeout = 5)
 #arduino.write(b'1')
 #s = [0,1]
 read_serial = arduino.readline()

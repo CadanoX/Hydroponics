@@ -32,14 +32,21 @@ document.addEventListener("DOMContentLoaded", function(event)
 						measures = JSON.parse(xhr.responseText);
 					}
 					catch(e) {
+						console.log(xhr.responseText);
 						console.log(e);
 					}
 					if (measures)
 					{
-						cardTempWater.setValue(measures.WaterTemp);
-						cardTempAir.setValue(measures.Temp);
-						cardEC.setValue(measures.EC);
-						cardHumidity.setValue(measures.Humidity);
+						if (measures.WaterTemp)
+							cardTempWater.setValue(measures.WaterTemp);
+						if (measures.Temp)
+							cardTempAir.setValue(measures.Temp);
+						if (measures.EC)
+							cardEC.setValue(measures.EC);
+						if (measures.Humidity)
+							cardHumidity.setValue(measures.Humidity);
+						if (measures.PH)
+							cardPH.setValue(measures.PH);
 					}
 				} else {
 					console.log('Error: ' + xhr.status); // An error occurred during the request.
@@ -56,7 +63,7 @@ document.addEventListener("DOMContentLoaded", function(event)
 		//cardTempAir.setValue(ran);
 		
 		getNewMeasurements();
-	}, 2000);
+	}, 5000);
 	
 	const MDCToolbar = mdc.toolbar.MDCToolbar;
 	const MDCToolbarFoundation = mdc.toolbar.MDCToolbarFoundation;
