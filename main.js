@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", function(event)
 						if (measures.Humidity)
 							cardHumidity.setValue(measures.Humidity);
 						if (measures.PH)
-							cardPH.setValue(measures.PH);
+							cardPh.setValue(measures.PH);
 					}
 				} else {
 					console.log('Error: ' + xhr.status); // An error occurred during the request.
