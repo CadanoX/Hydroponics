@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", function(event)
 	// react when the user changes the sliders value
 	cardTempAir.get().addEventListener('valueChanged', function(e) {
 		console.log(cardTempAir.getSliderValue());
+		//sendCommand("test");
 	});
 	
 	function getNewMeasurements()
@@ -21,22 +22,28 @@ document.addEventListener("DOMContentLoaded", function(event)
 		xhr.open('GET', 'serial.php', true);
 
 		// Track the state changes of the request.
-		xhr.onreadystatechange = function () {
+		xhr.onreadystatechange = function ()
+		{
 			var DONE = 4; // readyState 4 means the request is done.
 			var OK = 200; // status 200 is a successful return.
-			if (xhr.readyState === DONE) {
-				if (xhr.status === OK) {
-					//console.log(xhr.responseText); // 'This is the output.'
+			if (xhr.readyState === DONE)
+			{
+				if (xhr.status === OK)
+				{
 					let measures = null;
+					// decode the response
 					try {
 						measures = JSON.parse(xhr.responseText);
 					}
 					catch(e) {
+						// byte errors, that destroy the format
 						console.log(xhr.responseText);
 						console.log(e);
 					}
 					if (measures)
 					{
+						console.log(measures)
+						// TODO: check for byte errors in values
 						if (measures.WaterTemp)
 							cardTempWater.setValue(measures.WaterTemp);
 						if (measures.Temp)
@@ -57,11 +64,38 @@ document.addEventListener("DOMContentLoaded", function(event)
 		xhr.send();
 	}
 	
+	function sendCommand(command, param = "")
+	{
+		let data = new FormData();
+		data.append('commandName', command);
+		data.append('param', param);
+		
+		var xhr = new XMLHttpRequest();
+		xhr.open('POST', 'write_serial.php', true);
+
+		// Track the state changes of the request.
+		xhr.onreadystatechange = function ()
+		{
+			var DONE = 4; // readyState 4 means the request is done.
+			var OK = 200; // status 200 is a successful return.
+			if (xhr.readyState === DONE)
+			{
+				if (xhr.status === OK)
+				{
+					
+				} else {
+					console.log('Error: ' + xhr.status); // An error occurred during the request.
+				}
+			}
+		};
+		
+		xhr.send(data);
+	}
+	
 	setInterval(function() {
 		// test setValue
 		//let ran = Math.random()*100;
 		//cardTempAir.setValue(ran);
-		
 		getNewMeasurements();
 	}, 5000);
 	
