@@ -1,3 +1,29 @@
+var commandQueue = [];
+function Command(name, args)
+{
+	this.name = name;
+	this.args = args;
+}
+
+let workaroundSliderJustFired = false;
+
+// optimized for 8 cards
+function resize()
+{	
+	let con = document.getElementById('mainCardContainer');
+	let cards = document.querySelectorAll(".sensor-card");
+	let spaceX = (con.clientWidth / 4) - 24; // 24 = the left + right margin of the cards
+	let spaceY = (con.clientHeight / 2) - 24; // 24 = the left + right margin of the cards
+	let size = Math.min(spaceX, spaceY);
+	size = (size < 200) ? 200 : size; 
+	console.log(size);
+	for (i = 0; i < cards.length; i++)
+	{
+		cards[i].style.height = size + "px";
+		cards[i].style.width = size + "px";
+	}
+}
+
 document.addEventListener("DOMContentLoaded", function(event)
 {
 	let cardContainer = document.getElementById('mainCardContainer');
@@ -10,10 +36,88 @@ document.addEventListener("DOMContentLoaded", function(event)
 	let cardPh = new Card(cardContainer, 'pH', '/10', 0, 14);
 	let cardLight = new Card(cardContainer, 'Light PAR', '&micro;mol m<sup>-2</sup>s<sup>-1</sup>', 0, 2500);
 	
+	resize();
 	// react when the user changes the sliders value
-	cardTempAir.get().addEventListener('valueChanged', function(e) {
-		console.log(cardTempAir.getSliderValue());
-		//sendCommand("test");
+	cardTempAir.get().addEventListener('valueChanged', function(e)
+	{
+		if (workaroundSliderJustFired)
+		{
+			workaroundSliderJustFired = false;
+			return;
+		}
+		userChangedSlider("tempAir", cardTempAir.getSliderValue());
+		commandQueue.push( new Command("pump", 1000) );
+		workaroundSliderJustFired = true;
+	});
+	cardTempWater.get().addEventListener('valueChanged', function(e)
+	{
+		if (workaroundSliderJustFired)
+		{
+			workaroundSliderJustFired = false;
+			return;
+		}
+		userChangedSlider("tempWater", cardTempWater.getSliderValue());
+		workaroundSliderJustFired = true;
+	});
+	cardHumidity.get().addEventListener('valueChanged', function(e)
+	{
+		if (workaroundSliderJustFired)
+		{
+			workaroundSliderJustFired = false;
+			return;
+		}
+		userChangedSlider("humidity", cardHumidity.getSliderValue());
+		workaroundSliderJustFired = true;
+	});
+	cardCO2.get().addEventListener('valueChanged', function(e)
+	{
+		if (workaroundSliderJustFired)
+		{
+			workaroundSliderJustFired = false;
+			return;
+		}
+		userChangedSlider("CO2", cardCO2.getSliderValue());
+		workaroundSliderJustFired = true;
+	});
+	cardO2.get().addEventListener('valueChanged', function(e)
+	{
+		if (workaroundSliderJustFired)
+		{
+			workaroundSliderJustFired = false;
+			return;
+		}
+		userChangedSlider("O2", cardO2.getSliderValue());
+		workaroundSliderJustFired = true;
+	});
+	cardEC.get().addEventListener('valueChanged', function(e)
+	{
+		if (workaroundSliderJustFired)
+		{
+			workaroundSliderJustFired = false;
+			return;
+		}
+		userChangedSlider("EC", cardEC.getSliderValue());
+		workaroundSliderJustFired = true;
+	});
+	cardPh.get().addEventListener('valueChanged', function(e)
+	{
+		if (workaroundSliderJustFired)
+		{
+			workaroundSliderJustFired = false;
+			return;
+		}
+		userChangedSlider("Ph", cardPh.getSliderValue());
+		workaroundSliderJustFired = true;
+	});
+	cardLight.get().addEventListener('valueChanged', function(e)
+	{
+		if (workaroundSliderJustFired)
+		{
+			workaroundSliderJustFired = false;
+			return;
+		}
+		userChangedSlider("light", cardLight.getSliderValue());
+		workaroundSliderJustFired = true;
 	});
 	
 	function getNewMeasurements()
@@ -32,10 +136,12 @@ document.addEventListener("DOMContentLoaded", function(event)
 				{
 					let measures = null;
 					// decode the response
-					try {
+					try
+					{
 						measures = JSON.parse(xhr.responseText);
 					}
-					catch(e) {
+					catch(e)
+					{
 						// byte errors, that destroy the format
 						console.log(xhr.responseText);
 						console.log(e);
@@ -45,17 +151,34 @@ document.addEventListener("DOMContentLoaded", function(event)
 						console.log(measures)
 						// TODO: check for byte errors in values
 						if (measures.WaterTemp)
+						{
 							cardTempWater.setValue(measures.WaterTemp);
+							measurementChanged("tempWater", measures.WaterTemp);
+						}
 						if (measures.Temp)
+						{
 							cardTempAir.setValue(measures.Temp);
+							measurementChanged("tempAir", measures.Temp);
+						}
 						if (measures.EC)
+						{
 							cardEC.setValue(measures.EC);
+							measurementChanged("EC", measures.EC);
+						}
 						if (measures.Humidity)
+						{
 							cardHumidity.setValue(measures.Humidity);
+							measurementChanged("humidity", measures.Humidity);
+						}
 						if (measures.PH)
+						{
 							cardPh.setValue(measures.PH);
+							measurementChanged("PH", measures.PH);
+						}
 					}
-				} else {
+				}
+				else
+				{
 					console.log('Error: ' + xhr.status); // An error occurred during the request.
 				}
 			}
@@ -64,11 +187,11 @@ document.addEventListener("DOMContentLoaded", function(event)
 		xhr.send();
 	}
 	
-	function sendCommand(command, param = "")
+	function sendCommand(command, args = "")
 	{
 		let data = new FormData();
-		data.append('commandName', command);
-		data.append('param', param);
+		data.append('command', command);
+		data.append('args', args);
 		
 		var xhr = new XMLHttpRequest();
 		xhr.open('POST', 'write_serial.php', true);
@@ -82,8 +205,21 @@ document.addEventListener("DOMContentLoaded", function(event)
 			{
 				if (xhr.status === OK)
 				{
-					
-				} else {
+					let measures = null;
+					// decode the response
+					try
+					{
+						measures = JSON.parse(xhr.responseText);
+					}
+					catch(e)
+					{
+						// byte errors, that destroy the format
+						console.log(xhr.responseText);
+						console.log(e);
+					}
+				}
+				else
+				{
 					console.log('Error: ' + xhr.status); // An error occurred during the request.
 				}
 			}
@@ -92,11 +228,19 @@ document.addEventListener("DOMContentLoaded", function(event)
 		xhr.send(data);
 	}
 	
-	setInterval(function() {
-		// test setValue
-		//let ran = Math.random()*100;
-		//cardTempAir.setValue(ran);
-		getNewMeasurements();
+	setInterval(function()
+	{
+		let command = commandQueue.pop();
+		if (!!command)
+			sendCommand(command.name, command.args);
+		else
+			getNewMeasurements();
+		
+		
+		if (!!command)
+			console.log("comm");
+		else
+			console.log("meas");
 	}, 5000);
 	
 	const MDCToolbar = mdc.toolbar.MDCToolbar;
