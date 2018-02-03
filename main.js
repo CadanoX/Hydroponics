@@ -1,8 +1,8 @@
 var commandQueue = [];
-function Command(name, args)
+function Command(receiver, name)
 {
+	this.receiver = receiver;
 	this.name = name;
-	this.args = args;
 }
 
 let workaroundSliderJustFired = false;
@@ -46,7 +46,6 @@ document.addEventListener("DOMContentLoaded", function(event)
 			return;
 		}
 		userChangedSlider("tempAir", cardTempAir.getSliderValue());
-		commandQueue.push( new Command("pump", 1000) );
 		workaroundSliderJustFired = true;
 	});
 	cardTempWater.get().addEventListener('valueChanged', function(e)
@@ -187,11 +186,11 @@ document.addEventListener("DOMContentLoaded", function(event)
 		xhr.send();
 	}
 	
-	function sendCommand(command, args = "")
+	function sendCommand(receiver, command)
 	{
 		let data = new FormData();
+		data.append('receiver', receiver);
 		data.append('command', command);
-		data.append('args', args);
 		
 		var xhr = new XMLHttpRequest();
 		xhr.open('POST', 'write_serial.php', true);
@@ -232,7 +231,7 @@ document.addEventListener("DOMContentLoaded", function(event)
 	{
 		let command = commandQueue.pop();
 		if (!!command)
-			sendCommand(command.name, command.args);
+			sendCommand(command.receiver, command.name);
 		else
 			getNewMeasurements();
 		
