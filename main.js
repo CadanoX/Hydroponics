@@ -278,10 +278,14 @@ document.addEventListener("DOMContentLoaded", function(event)
 	{
 		let commandString = "";
 		let command;
-		while ((command = commandQueue.pop()) != undefined)
+		/*while ((command = commandQueue.pop()) != undefined)
 		{
 			commandString += command.receiver + " " + command.name + "!";
-		}
+		}*/
+		command = commandQueue.pop();
+		if (command != undefined)
+			commandString = command.receiver + " " + command.name;
+		
 		if (commandString.length > 30)
 			console.log("TOO LONG / TOO MANY COMMANDS, WE LOST BYTES ON THE WAY !!!");
 		
