@@ -277,10 +277,10 @@ document.addEventListener("DOMContentLoaded", function(event)
 	setInterval(function()
 	{
 		let commandString = "";
-		while (!!command)
+		let command;
+		while ((command = commandQueue.pop()) != undefined)
 		{
-			let command = commandQueue.pop();
-			commandString += command.receiver + " " + command.name += "!";
+			commandString += command.receiver + " " + command.name + "!";
 		}
 		if (commandString.length > 30)
 			console.log("TOO LONG / TOO MANY COMMANDS, WE LOST BYTES ON THE WAY !!!");
@@ -291,7 +291,7 @@ document.addEventListener("DOMContentLoaded", function(event)
 			getNewMeasurements();
 		
 		
-		if (!!command)
+		if (commandString != "")
 			console.log("comm");
 		else
 			console.log("meas");
