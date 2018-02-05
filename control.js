@@ -29,13 +29,13 @@ function userClickedButton(button, isOn)
 	{
 		case "pump1-button":
 			if (isOn)
-				sendCommand("3", "1,60000");
+				sendCommand("3", "1,30000");
 			else
 				sendCommand("3", "0");
 		break;
 		case "pump2-button":
 			if (isOn)
-				sendCommand("4", "1,60000");
+				sendCommand("4", "1,30000");
 			else
 				sendCommand("4", "0");
 		break;
@@ -52,7 +52,7 @@ function userClickedButton(button, isOn)
 				sendCommand("6", "0");	
 		break;
 		default:
-			console.log("Button " + name + " does not exist.");
+			console.log("Button " + button + " does not exist.");
 		break;
 	}
 }

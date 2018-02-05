@@ -1,12 +1,12 @@
 <?php
-    if (isset($_POST['receiver']) && isset($_POST['command']))
+    if (isset($_POST['commandString']))
 	{
-        sendCommand($_POST['receiver'], $_POST['command']);
+        sendCommand($_POST['commandString']);
     }
 	
-	function sendCommand($receiver, $command)
+	function sendCommand($commandString)
 	{
-		exec("python write_serial.py ".$receiver." ".$command, $readArray, $successful);
+		exec("python write_serial.py ".$commandString, $readArray, $successful);
 		echo $readArray[0];
 		unset($readArray);
 	}

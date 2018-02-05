@@ -234,11 +234,10 @@ document.addEventListener("DOMContentLoaded", function(event)
 		xhr.send();
 	}
 	
-	function sendCommand(receiver, command)
+	function sendCommandToDevice(commandString)
 	{
 		let data = new FormData();
-		data.append('receiver', receiver);
-		data.append('command', command);
+		data.append('commandString', commandString);
 		
 		var xhr = new XMLHttpRequest();
 		xhr.open('POST', 'write_serial.php', true);
@@ -277,9 +276,17 @@ document.addEventListener("DOMContentLoaded", function(event)
 	
 	setInterval(function()
 	{
-		let command = commandQueue.pop();
-		if (!!command)
-			sendCommand(command.receiver, command.name);
+		let commandString = "";
+		while (!!command)
+		{
+			let command = commandQueue.pop();
+			commandString += command.receiver + " " + command.name += "!";
+		}
+		if (commandString.length > 30)
+			console.log("TOO LONG / TOO MANY COMMANDS, WE LOST BYTES ON THE WAY !!!");
+		
+		if (commandString != "")
+			sendCommandToDevice(commandString);
 		else
 			getNewMeasurements();
 		
