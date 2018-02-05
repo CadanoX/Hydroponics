@@ -1,8 +1,15 @@
+var buttonIsOn = [0, 0, 0, 0]; // keep track of the buttons for sockets and pumps
+
 var commandQueue = [];
 function Command(receiver, name)
 {
 	this.receiver = receiver;
 	this.name = name;
+}
+
+function sendCommand(receiver, command)
+{
+	commandQueue.push( new Command(receiver, command) );
 }
 
 let workaroundSliderJustFired = false;
@@ -21,6 +28,47 @@ function resize()
 	{
 		cards[i].style.height = size + "px";
 		cards[i].style.width = size + "px";
+	}
+}
+
+function buttonClicked(button)
+{
+	switch(button.id)
+	{
+		case "pump1-button":
+			buttonIsOn[0] = !buttonIsOn[0];				
+			userClickedButton(button.id, buttonIsOn[0]);
+			if (buttonIsOn[0])
+				button.innerHTML = "hourglass_full";
+			else
+				button.innerHTML = "hourglass_empty";
+		break;
+		case "pump2-button":
+			buttonIsOn[1] = !buttonIsOn[1];
+			userClickedButton(button.id, buttonIsOn[1]);
+			if (buttonIsOn[1])
+				button.innerHTML = "hourglass_full";
+			else
+				button.innerHTML = "hourglass_empty";
+		break;
+		case "socket1-button":
+			buttonIsOn[2] = !buttonIsOn[2];
+			userClickedButton(button.id, buttonIsOn[2]);
+			if (buttonIsOn[2])
+				button.innerHTML = "label";
+			else
+				button.innerHTML = "label_outline";
+		break;
+		case "socket2-button":
+			buttonIsOn[3] = !buttonIsOn[3];
+			userClickedButton(button.id, buttonIsOn[3]);
+			if (buttonIsOn[3])
+				button.innerHTML = "label";
+			else
+				button.innerHTML = "label_outline";
+		break;
+		default:
+		break;
 	}
 }
 

@@ -2,7 +2,10 @@
  * receivers are listed by number:
  * 1 = pH
  * 2 = EC
- * 3 = pump
+ * 3 = pump 1
+ * 4 = pump 2
+ * 5 = socket 1
+ * 6 = socket 2
  *
  * sensors have predefined commands, described in their documentation, e.g.:
  * C,1 = read the sensors value every second
@@ -18,36 +21,62 @@
  * A command to set the EC sensors name would look like:
  * 2 Name,Thomas
  */
-
+ 
+function userClickedButton(button, isOn)
+{
+	//console.log("User clicked button " + button);
+	switch(button)
+	{
+		case "pump1-button":
+			if (isOn)
+				sendCommand("3", "1,60000");
+			else
+				sendCommand("3", "0");
+		break;
+		case "pump2-button":
+			if (isOn)
+				sendCommand("4", "1,60000");
+			else
+				sendCommand("4", "0");
+		break;
+		case "socket1-button":
+			if (isOn)
+				sendCommand("5", "1");
+			else
+				sendCommand("5", "0");				
+		break;
+		case "socket2-button":
+			if (isOn)
+				sendCommand("6", "1");
+			else
+				sendCommand("6", "0");	
+		break;
+		default:
+			console.log("Button " + name + " does not exist.");
+		break;
+	}
+}
 
 function userChangedSlider(sliderName, value)
 {
+	//console.log("Slider " + sliderName + " changed to value " + value);
 	switch(sliderName)
 	{
 		case "tempAir":
-			console.log("Slider " + sliderName + " changed to value " + value);
-			commandQueue.push( new Command("3", "1,1000") );
 		break;
 		case "tempWater":
-			console.log("Slider " + sliderName + " changed to value " + value);
 		break;
 		case "humidity":
-			console.log("Slider " + sliderName + " changed to value " + value);
 		break;
 		case "CO2":
-			console.log("Slider " + sliderName + " changed to value " + value);
 		break;
 		case "O2":
-			console.log("Slider " + sliderName + " changed to value " + value);
 		break;
 		case "EC":
-			console.log("Slider " + sliderName + " changed to value " + value);
 		break;
 		case "Ph":
-			console.log("Slider " + sliderName + " changed to value " + value);
 		break;
 		case "light":
-			console.log("Slider " + sliderName + " changed to value " + value);
 		break;
 		default:
 			console.log("Slider " + sliderName + " does not exist.");
