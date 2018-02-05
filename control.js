@@ -74,7 +74,7 @@ function userChangedSlider(sliderName, value)
 		break;
 		case "EC":
 		break;
-		case "Ph":
+		case "PH":
 		break;
 		case "light":
 		break;
@@ -96,7 +96,7 @@ function measurementChanged(measurement, value)
 		break;
 		case "EC":
 		break;
-		case "Ph":
+		case "PH":
 		break;
 		default:
 			console.log("Measurement " + measurement + " does not exist.");
