@@ -326,7 +326,7 @@ document.addEventListener("DOMContentLoaded", function(event)
 	
 	
 	let menuEl = document.querySelector('#menu');
-	let menu = new mdc.menu.MDCSimpleMenu(menuEl);
+	let menu = new mdc.menu.MDCMenu(menuEl);
 	document.querySelector('#menu-button').addEventListener('click', function (evt) {
 		menu.open = !menu.open;
 	});
