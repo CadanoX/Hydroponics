@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html class="mdc-typography">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1">
+		<title>OLD</title>
+		<!--
+		<link rel="stylesheet" href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css">
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
+		<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+		-->
+		<link rel="stylesheet" href="Google_MDC/material-components-web.min.css">
+		<link rel="stylesheet" href="Google_MDC/css.css">
+		<link rel="stylesheet" href="Google_MDC/icon.css">
+		
+		<link rel="stylesheet" type="text/css" href="style.css">
+		
+		<!--
+		<script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+		-->
+		<script src="Google_MDC/material-components-web.min.js">
+		
+		<script>window.mdc.autoInit();</script>
+		<script src="clock.js"></script>
+		<script src="cards.js"></script>
+		<script src="control.js"></script>
+		<script src="main.js"></script>
+	</head>
+	<body>
+    <main>
+	
+		<!-----------------
+		-- TOOLBAR
+		------------------->
+		
+		<header class="mdc-toolbar">
+		  <div class="mdc-toolbar__row">
+		    <section class="mdc-toolbar__section mdc-toolbar__section--align-start">
+			  <span class="mdc-toolbar__icon" id="clock">Time loading ...</span>
+			</section>
+			<section class="mdc-toolbar__section">
+			  Turtletech
+			</section>
+			<section class="mdc-toolbar__section mdc-toolbar__section--align-end">
+			  <a href="#" class="material-icons mdc-toolbar__menu-icon" id="socket1-button" onclick="buttonClicked(this)">label_outline</a>
+			  <a href="#" class="material-icons mdc-toolbar__menu-icon" id="socket2-button" onclick="buttonClicked(this)">label_outline</a>
+			  <a href="#" class="material-icons mdc-toolbar__menu-icon" id="pump1-button" onclick="buttonClicked(this)">hourglass_empty</a>
+			  <a href="#" class="material-icons mdc-toolbar__menu-icon" id="pump2-button" onclick="buttonClicked(this)">hourglass_empty</a>
+			  <a href="#" class="material-icons mdc-toolbar__menu-icon" id="menu-button">menu</a>
+			  <a href="#" class="material-icons mdc-toolbar__menu-icon" id="power-button">power_settings_new</a>
+			</section>
+		  </div>
+		</header>
+		
+		<!-----------------
+		-- TOOLBAR MENU
+		------------------->
+	
+        <div class="mdc-menu-anchor">
+          <div class="mdc-menu" style="position: absolute;" tabindex="-1" id="menu">
+            <ul class="mdc-menu__items mdc-list" role="menu" aria-hidden="true">
+              <li class="mdc-list-item" role="menuitem" tabindex="0">Back</li>
+              <li class="mdc-list-item" role="menuitem" tabindex="0">Forward</li>
+              <li class="mdc-list-item" role="menuitem" tabindex="0">Reload</li>
+              <li class="mdc-list-divider" role="separator"></li>
+
+              <li class="mdc-list-item" role="menuitem" tabindex="0">Save As...</li>
+            </ul>
+          </div>
+        </div>
+		
+		<!-----------------
+		-- MAIN WINDOW
+		------------------->
+		
+		<div id="mainCardContainer" class="sensor-card-container">
+		</div>
+
+	</main>
+	
+	<!-----------------
+	-- SHUT DOWN DIALOG
+	------------------->
+	
+	<aside id="mdc-dialog-shutdown"
+	  class="mdc-dialog"
+	  role="alertdialog"
+	  aria-labelledby="my-mdc-dialog-label"
+	  aria-describedby="my-mdc-dialog-description">
+	  <div class="mdc-dialog__surface">
+		<header class="mdc-dialog__header">
+		  <h2 id="my-mdc-dialog-label" class="mdc-dialog__header__title">
+			Do you really want to shut down the device?
+		  </h2>
+		</header>
+		<section id="my-mdc-dialog-description" class="mdc-dialog__body">
+		  While the device is shut down, no sensor data can be stored in the database.
+		</section>
+		<footer class="mdc-dialog__footer">
+		  <button type="button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel">Cancel</button>
+		  <button type="button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept">Shut Down</button>
+		</footer>
+	  </div>
+	  <div class="mdc-dialog__backdrop"></div>
+	</aside>
+	
+  </body>
+</html>
