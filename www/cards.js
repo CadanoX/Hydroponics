@@ -3,7 +3,7 @@
 (function ()
 {
 	// constructor
-	function Card(div, title, unit, valueMin, valueMax)
+	function Card(div, title, unit, valueMin, valueMax, floatDecimals = 1)
 	{
 		//let value = null;
 		let containerDiv = div;
@@ -68,7 +68,7 @@
 
 		this.setValue = function(newValue)
 		{
-			let val = Number.parseInt(newValue);
+			let val = Number.parseFloat(newValue).toFixed(floatDecimals);
 			if (Number.isNaN(val)) {
 				console.log("value is not a number");
 				return;
@@ -81,6 +81,13 @@
 			}
 			*/
 			valueDiv.innerHTML = val;
+		}
+		
+		this.resize = function(width, height)
+		{
+			card.style.height = height + "px";
+			card.style.width = width + "px";
+			slider.layout();
 		}
 	};
 

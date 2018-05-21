@@ -1,17 +1,20 @@
 var config = require('./config');
+
 // web server
 const express = require('express')
 const app = express()
 const server = require('http').Server(app);
+
 // arduino communication
-const SerialPort = require(config.arduino.serialPortModule); // remove /test, if not mocking
 const mockArduino = config.arduino.mockingEnabled; // emulate an arduino, in case you got no arduino connected
+const SerialPort = mockArduino ? require("serialport/test") : require("serialport");
 var arduinoPortPath = config.arduino.portPath;
 var arduinoBaudrate = config.arduino.baudRate;
-// Test base when no arduino is connected
-const MockBinding = SerialPort.Binding;
+const MockBinding = SerialPort.Binding; // Test base when no arduino is connected
+
 // file system
 const fs = require('fs');
+
 // client communication
 const io = require('socket.io')(server)
 
@@ -68,9 +71,11 @@ if (mockArduino)
 	arduinoPortPath = "arduinoMock";
 	MockBinding.createPort(arduinoPortPath, { echo: true, record: false });
 }
+
 const arduino = new SerialPort(arduinoPortPath, {
 	baudRate: arduinoBaudrate
 });
+
 const arduinoParser = arduino.pipe(new SerialPort.parsers.Readline({ delimiter: '\r\n' }));
 
 // WHEN CONNECTION IS ESTABLISHED
@@ -82,23 +87,27 @@ arduino.on("open", function ()
 });
 
 // when Arduino is sending data
-/*arduino.on('data', function(data)
+/*
+arduino.on('data', function(data)
 {
 	console.log("received data: " + data);
 });
 */
+
 // when Arduino is sending data ending on \r\n
 arduinoParser.on('data', function(data)
 {
 	console.log("received data: " + data);
 	onDataReceived(data);
 });
+
 // on error
 arduino.on('error', function(error)
 {
 	console.log("Error in connection with Arduino: ");
 	console.log(error.message);
 });
+
 // when connection is closed
 arduino.on('close', function()
 {

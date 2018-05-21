@@ -78,6 +78,8 @@ function userChangedSlider(sliderName, value)
 		break;
 		case "light":
 		break;
+		case "SAL":
+		break;
 		default:
 			console.log("Slider " + sliderName + " does not exist.");
 		break;
@@ -86,7 +88,7 @@ function userChangedSlider(sliderName, value)
 
 function measurementChanged(measurement, value)
 {
-	switch(sliderName)
+	switch(measurement)
 	{
 		case "tempAir":
 		break;
@@ -97,6 +99,14 @@ function measurementChanged(measurement, value)
 		case "EC":
 		break;
 		case "PH":
+		break;
+		case "SAL":
+			if (value < wantedValue.SAL)
+				console.log("SAL is smaller than the user wants");
+			else if (value > wantedValue.SAL)
+				console.log("SAL is bigger than the user wants");
+			else
+				console.log("SAL is perfect");
 		break;
 		default:
 			console.log("Measurement " + measurement + " does not exist.");

@@ -1,34 +1,46 @@
+var socket;
 var buttonIsOn = [0, 0, 0, 0]; // keep track of the buttons for sockets and pumps
+var wantedValue = {
+	"tempAir": 42.5,
+	"tempWater": 30,
+	"humidity": 55,
+	"CO2": 2500,
+	"O2": 18,
+	"EC": 250000,
+	"PH": 7,
+	"light": 1250,
+	"SAL": 50
+};
 
-var commandQueue = [];
+//var commandQueue = [];
 function Command(receiver, name)
 {
 	this.receiver = receiver;
 	this.name = name;
 }
 
+function sendCommandToDevice(command)
+{
+	socket.emit('new command', command);
+}
+	
 function sendCommand(receiver, command)
 {
-	commandQueue.push( new Command(receiver, command) );
+	sendCommandToDevice( new Command(receiver, command) );
 }
 
 let workaroundSliderJustFired = false;
 
 // optimized for 8 cards
-function resize()
+function calculateCardSize()
 {	
 	let con = document.getElementById('mainCardContainer');
-	let cards = document.querySelectorAll(".sensor-card");
 	let spaceX = (con.clientWidth / 4) - 24; // 24 = the left + right margin of the cards
 	let spaceY = (con.clientHeight / 2) - 24; // 24 = the left + right margin of the cards
 	let size = Math.min(spaceX, spaceY);
 	size = (size < 200) ? 200 : size; 
-	console.log(size);
-	for (i = 0; i < cards.length; i++)
-	{
-		cards[i].style.height = size + "px";
-		cards[i].style.width = size + "px";
-	}
+	//console.log(size);
+	return size;
 }
 
 function buttonClicked(button)
@@ -74,17 +86,44 @@ function buttonClicked(button)
 
 document.addEventListener("DOMContentLoaded", function(event)
 {
+	socket = io();
+	
 	let cardContainer = document.getElementById('mainCardContainer');
 	let cardTempAir = new Card(cardContainer, 'AirTemp', '&#8451;', -40, 125);
 	let cardTempWater = new Card(cardContainer, 'WaterTemp', '&#8451;', 0, 60);
-	let cardHumidity = new Card(cardContainer, 'Humidity', '%', 30, 80);
-	let cardCO2 = new Card(cardContainer, 'CO2', 'ppm', 0, 5000);
+	let cardHumidity = new Card(cardContainer, 'Humidity', '%', 30, 80, 0);
+	let cardCO2 = new Card(cardContainer, 'CO2', 'ppm', 0, 5000, 0);
 	let cardO2 = new Card(cardContainer, 'Dissolved O2', 'mg/l', 0, 36);
 	let cardEC = new Card(cardContainer, 'Conductivity', '&micro;S/cm', 0, 500000);
 	let cardPh = new Card(cardContainer, 'pH', '/10', 0, 14);
-	let cardLight = new Card(cardContainer, 'Light PAR', '&micro;mol m<sup>-2</sup>s<sup>-1</sup>', 0, 2500);
+	let cardLight = new Card(cardContainer, 'Light PAR', '&micro;mol m<sup>-2</sup>s<sup>-1</sup>', 0, 2500, 0);
+	let cardSAL = new Card(cardContainer, 'SAL', 'g/kg', 0, 36, 2)
 	
-	resize();
+	let resizeCardSize = calculateCardSize();
+	cardTempAir.resize(resizeCardSize, resizeCardSize);
+	cardTempWater.resize(resizeCardSize, resizeCardSize);
+	cardHumidity.resize(resizeCardSize, resizeCardSize);
+	cardCO2.resize(resizeCardSize, resizeCardSize);
+	cardO2.resize(resizeCardSize, resizeCardSize);
+	cardEC.resize(resizeCardSize, resizeCardSize);
+	cardPh.resize(resizeCardSize, resizeCardSize);
+	cardLight.resize(resizeCardSize, resizeCardSize);
+	cardSAL.resize(resizeCardSize, resizeCardSize);
+	
+	window.addEventListener('resize', function()
+	{
+		let resizeCardSize = calculateCardSize();
+		cardTempAir.resize(resizeCardSize, resizeCardSize);
+		cardTempWater.resize(resizeCardSize, resizeCardSize);
+		cardHumidity.resize(resizeCardSize, resizeCardSize);
+		cardCO2.resize(resizeCardSize, resizeCardSize);
+		cardO2.resize(resizeCardSize, resizeCardSize);
+		cardEC.resize(resizeCardSize, resizeCardSize);
+		cardPh.resize(resizeCardSize, resizeCardSize);
+		cardLight.resize(resizeCardSize, resizeCardSize);
+		cardSAL.resize(resizeCardSize, resizeCardSize);
+	}, true);
+
 	// react when the user changes the sliders value
 	cardTempAir.get().addEventListener('valueChanged', function(e)
 	{
@@ -93,6 +132,7 @@ document.addEventListener("DOMContentLoaded", function(event)
 			workaroundSliderJustFired = false;
 			return;
 		}
+		wantedValue.tempAir = cardTempAir.getSliderValue();
 		userChangedSlider("tempAir", cardTempAir.getSliderValue());
 		workaroundSliderJustFired = true;
 	});
@@ -103,6 +143,7 @@ document.addEventListener("DOMContentLoaded", function(event)
 			workaroundSliderJustFired = false;
 			return;
 		}
+		wantedValue.tempWater = cardTempWater.getSliderValue();
 		userChangedSlider("tempWater", cardTempWater.getSliderValue());
 		workaroundSliderJustFired = true;
 	});
@@ -113,6 +154,7 @@ document.addEventListener("DOMContentLoaded", function(event)
 			workaroundSliderJustFired = false;
 			return;
 		}
+		wantedValue.humidity = cardHumidity.getSliderValue();
 		userChangedSlider("humidity", cardHumidity.getSliderValue());
 		workaroundSliderJustFired = true;
 	});
@@ -123,6 +165,7 @@ document.addEventListener("DOMContentLoaded", function(event)
 			workaroundSliderJustFired = false;
 			return;
 		}
+		wantedValue.CO2 = cardCO2.getSliderValue();
 		userChangedSlider("CO2", cardCO2.getSliderValue());
 		workaroundSliderJustFired = true;
 	});
@@ -133,6 +176,7 @@ document.addEventListener("DOMContentLoaded", function(event)
 			workaroundSliderJustFired = false;
 			return;
 		}
+		wantedValue.O2 = cardO2.getSliderValue();
 		userChangedSlider("O2", cardO2.getSliderValue());
 		workaroundSliderJustFired = true;
 	});
@@ -143,6 +187,7 @@ document.addEventListener("DOMContentLoaded", function(event)
 			workaroundSliderJustFired = false;
 			return;
 		}
+		wantedValue.EC = cardEC.getSliderValue();
 		userChangedSlider("EC", cardEC.getSliderValue());
 		workaroundSliderJustFired = true;
 	});
@@ -153,7 +198,8 @@ document.addEventListener("DOMContentLoaded", function(event)
 			workaroundSliderJustFired = false;
 			return;
 		}
-		userChangedSlider("Ph", cardPh.getSliderValue());
+		wantedValue.PH = cardPh.getSliderValue();
+		userChangedSlider("PH", cardPh.getSliderValue());
 		workaroundSliderJustFired = true;
 	});
 	cardLight.get().addEventListener('valueChanged', function(e)
@@ -163,143 +209,57 @@ document.addEventListener("DOMContentLoaded", function(event)
 			workaroundSliderJustFired = false;
 			return;
 		}
+		wantedValue.light = cardLight.getSliderValue();
 		userChangedSlider("light", cardLight.getSliderValue());
 		workaroundSliderJustFired = true;
 	});
 	
-	function getNewMeasurements()
+	cardSAL.get().addEventListener('valueChanged', function(e)
 	{
-		var xhr = new XMLHttpRequest();
-		xhr.open('GET', 'serial.php', true);
-
-		// Track the state changes of the request.
-		xhr.onreadystatechange = function ()
+		if (workaroundSliderJustFired)
 		{
-			var DONE = 4; // readyState 4 means the request is done.
-			var OK = 200; // status 200 is a successful return.
-			if (xhr.readyState === DONE)
-			{
-				if (xhr.status === OK)
-				{
-					let measures = null;
-					// decode the response
-					try
-					{
-						measures = JSON.parse(xhr.responseText);
-					}
-					catch(e)
-					{
-						// byte errors, that destroy the format
-						console.log(xhr.responseText);
-						console.log(e);
-					}
-					if (measures)
-					{
-						console.log(measures)
-						// TODO: check for byte errors in values
-						if (measures.WaterTemp)
-						{
-							cardTempWater.setValue(measures.WaterTemp);
-							measurementChanged("tempWater", measures.WaterTemp);
-						}
-						if (measures.Temp)
-						{
-							cardTempAir.setValue(measures.Temp);
-							measurementChanged("tempAir", measures.Temp);
-						}
-						if (measures.EC)
-						{
-							cardEC.setValue(measures.EC);
-							measurementChanged("EC", measures.EC);
-						}
-						if (measures.Humidity)
-						{
-							cardHumidity.setValue(measures.Humidity);
-							measurementChanged("humidity", measures.Humidity);
-						}
-						if (measures.PH)
-						{
-							cardPh.setValue(measures.PH);
-							measurementChanged("PH", measures.PH);
-						}
-					}
-				}
-				else
-				{
-					console.log('Error: ' + xhr.status); // An error occurred during the request.
-				}
-			}
-		};
-		
-		xhr.send();
-	}
+			workaroundSliderJustFired = false;
+			return;
+		}
+		wantedValue.SAL = cardSAL.getSliderValue();
+		userChangedSlider("SAL", cardSAL.getSliderValue());
+		workaroundSliderJustFired = true;
+	});
 	
-	function sendCommandToDevice(commandString)
+	socket.on('new measurements', onMeasuresReceived);
+	function onMeasuresReceived(measures)
 	{
-		let data = new FormData();
-		data.append('commandString', commandString);
-		
-		var xhr = new XMLHttpRequest();
-		xhr.open('POST', 'write_serial.php', true);
-
-		// Track the state changes of the request.
-		xhr.onreadystatechange = function ()
+		if (!!measures.WaterTemp)
 		{
-			var DONE = 4; // readyState 4 means the request is done.
-			var OK = 200; // status 200 is a successful return.
-			if (xhr.readyState === DONE)
-			{
-				if (xhr.status === OK)
-				{
-					let measures = null;
-					// decode the response
-					try
-					{
-						measures = JSON.parse(xhr.responseText);
-					}
-					catch(e)
-					{
-						// byte errors, that destroy the format
-						console.log(xhr.responseText);
-						console.log(e);
-					}
-				}
-				else
-				{
-					console.log('Error: ' + xhr.status); // An error occurred during the request.
-				}
-			}
-		};
-		
-		xhr.send(data);
+			cardTempWater.setValue(measures.WaterTemp);
+			measurementChanged("tempWater", measures.WaterTemp);
+		}
+		if (!!measures.Temp)
+		{
+			cardTempAir.setValue(measures.Temp);
+			measurementChanged("tempAir", measures.Temp);
+		}
+		if (!!measures.EC)
+		{
+			cardEC.setValue(measures.EC);
+			measurementChanged("EC", measures.EC);
+		}
+		if (!!measures.Humidity)
+		{
+			cardHumidity.setValue(measures.Humidity);
+			measurementChanged("humidity", measures.Humidity);
+		}
+		if (!!measures.PH)
+		{
+			cardPh.setValue(measures.PH);
+			measurementChanged("PH", measures.PH);
+		}
+		if (!!measures.SAL)
+		{
+			cardSAL.setValue(measures.SAL);
+			measurementChanged("SAL", measures.SAL);
+		}
 	}
-	
-	setInterval(function()
-	{
-		let commandString = "";
-		let command;
-		/*while ((command = commandQueue.pop()) != undefined)
-		{
-			commandString += command.receiver + " " + command.name + "!";
-		}*/
-		command = commandQueue.pop();
-		if (command != undefined)
-			commandString = command.receiver + " " + command.name;
-		
-		if (commandString.length > 30)
-			console.log("TOO LONG / TOO MANY COMMANDS, WE LOST BYTES ON THE WAY !!!");
-		
-		if (commandString != "")
-			sendCommandToDevice(commandString);
-		else
-			getNewMeasurements();
-		
-		
-		if (commandString != "")
-			console.log("comm");
-		else
-			console.log("meas");
-	}, 5000);
 	
 	const MDCToolbar = mdc.toolbar.MDCToolbar;
 	const MDCToolbarFoundation = mdc.toolbar.MDCToolbarFoundation;
