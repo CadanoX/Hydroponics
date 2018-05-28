@@ -20,7 +20,7 @@ const io = require('socket.io')(server)
 
 
 /* CREATE WEB SERVER */
-app.use(express.static(__dirname + '/old')); // show where the web site lies
+app.use(express.static(__dirname + '/www')); // show where the web site lies
 app.use('/scripts', express.static(__dirname + '/node_modules/material-components-web/dist/'));
 app.get('/', handler);
 server.listen(80, () => console.log('OLD server running on port 80!'));
@@ -70,6 +70,7 @@ if (mockArduino)
 {
 	arduinoPortPath = "arduinoMock";
 	MockBinding.createPort(arduinoPortPath, { echo: true, record: false });
+	setInterval(() => onDataReceived("{\"Temp\":\""+Math.random()*10+"\"}"), 2000);
 }
 
 const arduino = new SerialPort(arduinoPortPath, {
