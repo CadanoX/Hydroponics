@@ -99,6 +99,14 @@ function measurementChanged(measurement, value)
 		case "EC":
 		break;
 		case "PH":
+			if (value < 4)
+				sendCommand("3", "1,2000");
+			else if (value < 5.6)
+				sendCommand("3", "1,1000");
+			else if (value > 7)
+				sendCommand("4", "1,2000");
+			else if (value > 6.4)
+				sendCommand("4", "1,1000");
 		break;
 		case "SAL":
 			if (value < wantedValue.SAL)

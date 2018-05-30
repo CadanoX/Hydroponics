@@ -4,6 +4,12 @@ var config = require('./config');
 const express = require('express')
 const app = express()
 const server = require('http').Server(app);
+// client communication
+const io = require('socket.io')(server)
+// database
+const Mongod = require('mongod');
+const MongoClient = require('mongodb').MongoClient;
+var DB = { initialized: false };
 
 // arduino communication
 const mockArduino = config.arduino.mockingEnabled; // emulate an arduino, in case you got no arduino connected
@@ -15,9 +21,60 @@ const MockBinding = SerialPort.Binding; // Test base when no arduino is connecte
 // file system
 const fs = require('fs');
 
-// client communication
-const io = require('socket.io')(server)
+/* RUN AND CONNECT TO DATABASE */
+const dbServer = new Mongod(27017);
+if (dbServer.isRunning)
+{
+	dbServer.open((err) => {
+	if (err === null) {
+	// You may now connect a client to the MongoDB
+	// server bound to port 27017.
+	}
+	else
+		console.log('Database error: ', err.message);
+	});
 
+	/* CONNECT DATABASE */
+	var url = "mongodb://localhost:27017/";
+
+	MongoClient.connect(url, function(err, db)
+	{
+		if (err) throw err;
+		var dbo = db.db("olddb");
+		dbo.createCollection("measurements", function(err, res) {
+			if (err) throw err;
+			console.log("Collection \"measurements\" exists!");
+			DB.measurements = dbo.collection("measurements");
+			DB.initialized = true;
+		});
+	});
+}
+
+function storeMeasurement(measure, value)
+{
+	if (DB.initialized)
+	{
+		var doc = { name: measure, address: value };
+		DB.measurements.insertOne(doc, function(err, res)
+		{
+			if (err) throw err;
+			console.log("1 document inserted");
+		});
+	}
+}
+
+function restoreMeasurements(measure)
+{
+	if (DB.initialized)
+	{
+		var query = { address: "Temp" };
+		DB.measurements.find(query).toArray(function(err, result)
+		{
+			if (err) throw err;
+			console.log(result);
+		});
+	}
+}
 
 /* CREATE WEB SERVER */
 app.use(express.static(__dirname + '/www')); // show where the web site lies
@@ -61,7 +118,11 @@ function onDataReceived(data)
 			console.log(e);
 		}
 		if (measures)
+		{
 			io.emit('new measurements', measures);
+			if (measures.Temp)
+				storeMeasurement("Temp", measures.Temp);
+		}
 	}
 }
 
@@ -70,7 +131,11 @@ if (mockArduino)
 {
 	arduinoPortPath = "arduinoMock";
 	MockBinding.createPort(arduinoPortPath, { echo: true, record: false });
-	setInterval(() => onDataReceived("{\"Temp\":\""+Math.random()*10+"\"}"), 2000);
+	setInterval(() => onDataReceived("{"+
+		"\"Temp\":\""+Math.random()*10+"\","+
+		"\"WaterTemp\":\""+Math.random()*10+"\","+
+		"\"PH\":\""+Math.random()*10+"\""+
+		"}"), 2000);
 }
 
 const arduino = new SerialPort(arduinoPortPath, {
