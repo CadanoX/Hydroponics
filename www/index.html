@@ -71,10 +71,27 @@
         </div>
 		
 		<!-----------------
+		-- TABS
+		------------------->
+		
+		<section id="dyamic-nav-bar">
+			<nav id="dynamic-tab-bar" class="mdc-tab-bar" role="tablist">
+				<a role="tab" aria-controls="panel-1"
+				   class="mdc-tab mdc-tab--active" href="#panel-1">Home</a>
+				<a role="tab" aria-controls="panel-2"
+				   class="mdc-tab" href="#panel-2">Analysis</a>
+				<span class="mdc-tab-bar__indicator"></span>
+			</nav>
+		</section>
+		
+		<!-----------------
 		-- MAIN WINDOW
 		------------------->
 		
-		<div id="mainCardContainer" class="sensor-card-container">
+		<div class="panels">
+			<div id="mainCardContainer" class="panel active sensor-card-container" role="tabpanel" aria-hidden="false"></div>
+			<p class="panel" id="panel-2" role="tabpanel" aria-hidden="true">Item Two</p>
+			<p class="panel" id="panel-3" role="tabpanel" aria-hidden="true">Item Three</p>
 		</div>
 
 	</main>

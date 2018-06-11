@@ -3,11 +3,8 @@
 (function ()
 {
 	// constructor
-	function Card(div, title, unit, valueMin, valueMax, floatDecimals = 1)
-	{
-		//let value = null;
-		let containerDiv = div;
-		
+	function Card(containerDiv, title, unit, valueMin, valueMax, floatDecimals = 1, valueScale = [valueMin, valueMax])
+	{		
 		let card = document.createElement("div");
 		card.classList = "mdc-card sensor-card";
 		containerDiv.appendChild(card);
@@ -81,6 +78,72 @@
 			}
 			*/
 			valueDiv.innerHTML = val;
+			
+			this.checkState();
+		}
+		
+		this.setValueScale = function(scale)
+		{
+			let last = Number.MIN_VALUE;
+			for(var i = 0; i < scale.length; i++)
+			{
+				if (scale[i] < last)
+				{
+					console.log ("valueScale is not ordered ascending");
+					return;
+				}
+				last = scale[i];
+			}
+			valueScale = scale;
+		}
+		
+		this.checkState = function()
+		{
+			let cardFooter = card.querySelector(".mdc-card__footer");
+			
+			if (valueScale.length == 2)
+			{
+				cardFooter.style.backgroundColor = 'gray';
+				return;
+			}
+				
+			// find positioning of the current value within the valueScale
+			let sortedIndex = ((array, value) =>
+			{
+				var low = 0,
+					high = array.length;
+
+				while (low < high) {
+					var mid = (low + high) >>> 1;
+					if (array[mid] < value)
+						low = mid + 1;
+					else high = mid;
+				}
+				return low;
+			})(valueScale, valueDiv.innerHTML);
+			
+			if (valueScale.length == 6)
+			{
+				switch(sortedIndex)
+				{
+					case 1:
+					case 5:
+						cardFooter.style.backgroundColor = 'red';
+						break;
+					case 2:
+					case 4:
+						cardFooter.style.backgroundColor = 'orange';
+						break;
+					case 3:
+						cardFooter.style.backgroundColor = 'green';
+						break;
+					default:
+						cardFooter.style.backgroundColor = 'gray';
+						break;
+				}					
+			}
+			else
+				console.log("valueScale is not supported.");
 		}
 		
 		this.resize = function(width, height)
@@ -175,7 +238,7 @@
 					cardSliderThumbContainer.appendChild(cardSliderFocusRing);
 					
 			let cardButton = document.createElement("button");
-			cardButton.classList = "mdc-button mdc-button--stroked mdc-button--compact mdc-card__action sensor-card-button";
+			cardButton.classList = "mdc-button mdc-button--raised mdc-button--compact mdc-card__action sensor-card-button";
 			cardButton.innerHTML = "Set value";
 			cardActions.appendChild(cardButton);
 			

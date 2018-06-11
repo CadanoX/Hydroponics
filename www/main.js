@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", function(event)
 	let cardLight = new Card(cardContainer, 'Light PAR', '&micro;mol m<sup>-2</sup>s<sup>-1</sup>', 0, 2500, 0);
 	let cardSAL = new Card(cardContainer, 'SAL', 'g/kg', 0, 36, 2)
 	
-	let resizeCardSize = calculateCardSize();
+	/*let resizeCardSize = calculateCardSize();
 	cardTempAir.resize(resizeCardSize, resizeCardSize);
 	cardTempWater.resize(resizeCardSize, resizeCardSize);
 	cardHumidity.resize(resizeCardSize, resizeCardSize);
@@ -122,7 +122,7 @@ document.addEventListener("DOMContentLoaded", function(event)
 		cardPh.resize(resizeCardSize, resizeCardSize);
 		cardLight.resize(resizeCardSize, resizeCardSize);
 		cardSAL.resize(resizeCardSize, resizeCardSize);
-	}, true);
+	}, true);*/
 
 	// react when the user changes the sliders value
 	cardTempAir.get().addEventListener('valueChanged', function(e)
@@ -265,6 +265,31 @@ document.addEventListener("DOMContentLoaded", function(event)
 	const MDCToolbarFoundation = mdc.toolbar.MDCToolbarFoundation;
 	const toolbar = new MDCToolbar(document.querySelector('.mdc-toolbar'));
 	
+	const dynamicTabBar = window.dynamicTabBar = new mdc.tabs.MDCTabBar(document.querySelector('#dynamic-tab-bar'));
+	const panels = document.querySelector('.panels');
+
+	dynamicTabBar.tabs.forEach(function(tab) {
+		tab.preventDefaultOnClick = true;
+	});
+
+	function updatePanel(index)
+	{
+		let activePanel = panels.querySelector('.panel.active');
+		if (activePanel) {
+			activePanel.classList.remove('active');
+		}
+		let newActivePanel = panels.querySelector('.panel:nth-child(' + (index + 1) + ')');
+		if (newActivePanel) {
+			newActivePanel.classList.add('active');
+		}
+	}
+
+	dynamicTabBar.listen('MDCTabBar:change', function ({detail: tabs})
+	{
+		let nthChildIndex = tabs.activeTabIndex;
+		updatePanel(nthChildIndex);
+	});
+
 	const MDCDialog = mdc.dialog.MDCDialog;
 	const MDCDialogFoundation = mdc.dialog.MDCDialogFoundation;
 	const util = mdc.dialog.util;

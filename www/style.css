@@ -1,45 +1,87 @@
 :root {
-	--mdc-theme-primary: black;
+    --mdc-theme-primary: black;
+    --mdc-theme-background: #222;
+	/*--mdc-theme-on-primary: #ffe866;*/
+	--mdc-theme-text-primary-on-primary: #f2dd6a;
+	--mdc-theme-text-primary-on-light: #f2dd6a; /* tab highlight */
+	--mdc-theme-text-secondary-on-background: #b5a348; /* unactive tab */
+	--mdc-theme-text-primary-on-background: #f2dd6a; /* hovered tab */
+	/*
+	--mdc-theme-secondary: red;
+	--mdc-theme-surface: red;
+	--mdc-theme-on-primary: #ffe866;
+	--mdc-theme-on-secondary: #e6c300;
+	--mdc-theme-on-surface: red;
+	--mdc-theme-text-primary-on-background: red;
+	--mdc-theme-text-secondary-on-background: blue;*/
 }
+
+body {
+	background-color: #111;
+}
+
+.mdc-toolbar {
+	color: #f2dd6a
+}
+
+.mdc-tab{
+	/*color: #f2dd6a;*/
+}
+
+.mdc-card {
+	color: #e6c300;
+}
+
 .mdc-grid-tile {
 	--mdc-grid-list-tile-width: 300px;
 }
+
+.panel {
+  display: none;
+}
+.panel.active {
+  display: flex;
+}
+
 .sensor-card-container {
-	align-content: left;
-	display: flex;
+	align-content: center;
 	flex-flow: row wrap;
-	justify-content: left;
+	justify-content: center;
 }
 .sensor-card-container .sensor-card {
-	height: 250px;
+	height: 45vh;
 	margin: 12px;
-	width: 250px;
+	width: 45vh;
 }
 .sensor-card .sensor-card__header {
-	background-color: black;
-	padding: 16px;
+	background-color: var(--mdc-theme-primary,#fff);
+	padding: 3vh;
 	position: relative;
 }
-.sensor-card .sensor-card__footer {
+.sensor-card .mdc-card__footer {
 	background-color: lightgreen;
-	padding: 4px;
+	padding: 1vh;
 	position: relative;
 }
 .sensor-card .mdc-card__primary {
 	text-align: center;
-	padding-bottom: 8px;
+	/*padding-bottom: 8px;*/
 }
 .sensor-card .sensor-card__measurement {
 	margin: auto;
 }
 .sensor-card .sensor-card__value {
-	font-size: 3rem;
+	font-size: 10vh;
 	font-weight: 700;
 }
 .sensor-card .sensor-card__unit {
-	font-size: 0.85rem;
+	font-size: 3vh;
 	font-weight: 400;
 }
+.sensor-card .sensor-card__actions {
+	display: none;
+}
+	
 .sensor-card-slider {
 	/*display: none;*/
 }
