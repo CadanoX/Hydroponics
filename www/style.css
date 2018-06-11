@@ -24,6 +24,13 @@ body {
 	color: #f2dd6a
 }
 
+#dyamic-nav-bar {
+	background-color: #222; /* tab bar under the toolbar */
+}
+#dyamic-tab-bar {
+	/*background-color: black;*/ /* container around the elements of the tab bar */
+}
+
 .mdc-tab{
 	/*color: #f2dd6a;*/
 }

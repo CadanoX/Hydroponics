@@ -99,31 +99,6 @@ document.addEventListener("DOMContentLoaded", function(event)
 	let cardLight = new Card(cardContainer, 'Light PAR', '&micro;mol m<sup>-2</sup>s<sup>-1</sup>', 0, 2500, 0);
 	let cardSAL = new Card(cardContainer, 'SAL', 'g/kg', 0, 36, 2)
 	
-	/*let resizeCardSize = calculateCardSize();
-	cardTempAir.resize(resizeCardSize, resizeCardSize);
-	cardTempWater.resize(resizeCardSize, resizeCardSize);
-	cardHumidity.resize(resizeCardSize, resizeCardSize);
-	cardCO2.resize(resizeCardSize, resizeCardSize);
-	cardO2.resize(resizeCardSize, resizeCardSize);
-	cardEC.resize(resizeCardSize, resizeCardSize);
-	cardPh.resize(resizeCardSize, resizeCardSize);
-	cardLight.resize(resizeCardSize, resizeCardSize);
-	cardSAL.resize(resizeCardSize, resizeCardSize);
-	
-	window.addEventListener('resize', function()
-	{
-		let resizeCardSize = calculateCardSize();
-		cardTempAir.resize(resizeCardSize, resizeCardSize);
-		cardTempWater.resize(resizeCardSize, resizeCardSize);
-		cardHumidity.resize(resizeCardSize, resizeCardSize);
-		cardCO2.resize(resizeCardSize, resizeCardSize);
-		cardO2.resize(resizeCardSize, resizeCardSize);
-		cardEC.resize(resizeCardSize, resizeCardSize);
-		cardPh.resize(resizeCardSize, resizeCardSize);
-		cardLight.resize(resizeCardSize, resizeCardSize);
-		cardSAL.resize(resizeCardSize, resizeCardSize);
-	}, true);*/
-
 	// react when the user changes the sliders value
 	cardTempAir.get().addEventListener('valueChanged', function(e)
 	{

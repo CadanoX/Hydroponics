@@ -50,6 +50,7 @@
 			buttonDiv.style.display = "none";
 			// show slider
 			sliderDiv.style.display = "inline";
+			slider.layout();
 			/*
 			// define slider values
 			let {MDCSlider} = mdc.slider;
@@ -144,13 +145,6 @@
 			}
 			else
 				console.log("valueScale is not supported.");
-		}
-		
-		this.resize = function(width, height)
-		{
-			card.style.height = height + "px";
-			card.style.width = width + "px";
-			slider.layout();
 		}
 	};
 
