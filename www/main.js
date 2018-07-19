@@ -6,11 +6,15 @@ var wantedValue = {
 	"humidity": 55,
 	"CO2": 2500,
 	"O2": 18,
-	"EC": 250000,
+	"EC": 2500,
 	"PH": 7,
 	"light": 1250,
 	"SAL": 50
 };
+
+function isNumeric(n) {
+    return !isNaN(parseFloat(n)) && isFinite(n);
+}
 
 //var commandQueue = [];
 function Command(receiver, name)
@@ -94,8 +98,8 @@ document.addEventListener("DOMContentLoaded", function(event)
 	let cardHumidity = new Card(cardContainer, 'Humidity', '%', 30, 80, 0);
 	let cardCO2 = new Card(cardContainer, 'CO2', 'ppm', 0, 5000, 0);
 	let cardO2 = new Card(cardContainer, 'Dissolved O2', 'mg/l', 0, 36);
-	let cardEC = new Card(cardContainer, 'Conductivity', '&micro;S/cm', 0, 500000);
-	let cardPh = new Card(cardContainer, 'pH', '/10', 0, 14);
+	let cardEC = new Card(cardContainer, 'Conductivity', '&micro;S/cm', 0, 5000, 1, [0,1500,2100,2900,3500,5000]);
+	let cardPh = new Card(cardContainer, 'pH', '/10', 0, 14, 1, [0,5,6.6,7.4,9,14]);
 	let cardLight = new Card(cardContainer, 'Light PAR', '&micro;mol m<sup>-2</sup>s<sup>-1</sup>', 0, 2500, 0);
 	let cardSAL = new Card(cardContainer, 'SAL', 'g/kg', 0, 36, 2)
 	
@@ -163,6 +167,17 @@ document.addEventListener("DOMContentLoaded", function(event)
 			return;
 		}
 		wantedValue.EC = cardEC.getSliderValue();
+		/* TODO: change the way the scale is given (e.g. without first and last value, because card has it already? or remove those 2 parameters from the card)
+			maybe give the differences from the wanted value? (are they always symmetric?)
+			make sure that wantedValue + X is not bigger than the maximum !!
+		*/
+		cardEC.setValueScale([
+			0,
+			wantedValue.EC - 1000,
+			wantedValue.EC - 400,
+			wantedValue.EC + 400,
+			wantedValue.EC + 1000,
+			5000]);
 		userChangedSlider("EC", cardEC.getSliderValue());
 		workaroundSliderJustFired = true;
 	});
@@ -174,6 +189,13 @@ document.addEventListener("DOMContentLoaded", function(event)
 			return;
 		}
 		wantedValue.PH = cardPh.getSliderValue();
+		cardPh.setValueScale([
+			0,
+			wantedValue.PH - 2,
+			wantedValue.PH - 0.4,
+			wantedValue.PH + 0.4,
+			wantedValue.PH + 2,
+			14]);
 		userChangedSlider("PH", cardPh.getSliderValue());
 		workaroundSliderJustFired = true;
 	});

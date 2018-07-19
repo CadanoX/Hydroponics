@@ -58,9 +58,9 @@ function userClickedButton(button, isOn)
 }
 
 function userChangedSlider(sliderName, value)
-{
+{	
 	//console.log("Slider " + sliderName + " changed to value " + value);
-	switch(sliderName)
+	/*switch(sliderName)
 	{
 		case "tempAir":
 		break;
@@ -84,6 +84,7 @@ function userChangedSlider(sliderName, value)
 			console.log("Slider " + sliderName + " does not exist.");
 		break;
 	}
+	*/
 }
 
 function measurementChanged(measurement, value)
@@ -97,15 +98,19 @@ function measurementChanged(measurement, value)
 		case "humidity":
 		break;
 		case "EC":
+			if (value < wantedValue.EC - 450)
+				sendCommand("3", "1,3000");
+			else if (value > wantedValue.EC + 450)
+				sendCommand("4", "1,3000");
 		break;
 		case "PH":
-			if (value < 4)
+			if (value < wantedValue.PH - 2)
 				sendCommand("3", "1,2000");
-			else if (value < 5.6)
+			else if (value < wantedValue.PH - 0.4)
 				sendCommand("3", "1,1000");
-			else if (value > 7)
+			else if (value > wantedValue.PH + 2)
 				sendCommand("4", "1,2000");
-			else if (value > 6.4)
+			else if (value > wantedValue.PH + 0.4)
 				sendCommand("4", "1,1000");
 		break;
 		case "SAL":

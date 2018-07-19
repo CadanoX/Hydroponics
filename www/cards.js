@@ -3,6 +3,7 @@
 (function ()
 {
 	// constructor
+	/* TODO: move all optional parameters to OPTIONS object */
 	function Card(containerDiv, title, unit, valueMin, valueMax, floatDecimals = 1, valueScale = [valueMin, valueMax])
 	{		
 		let card = document.createElement("div");
@@ -85,7 +86,7 @@
 		
 		this.setValueScale = function(scale)
 		{
-			let last = Number.MIN_VALUE;
+			let last = -Number.MAX_VALUE;
 			for(var i = 0; i < scale.length; i++)
 			{
 				if (scale[i] < last)

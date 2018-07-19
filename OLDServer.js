@@ -26,12 +26,12 @@ const dbServer = new Mongod(27017);
 if (dbServer.isRunning)
 {
 	dbServer.open((err) => {
-	if (err === null) {
-	// You may now connect a client to the MongoDB
-	// server bound to port 27017.
-	}
-	else
-		console.log('Database error: ', err.message);
+		if (err === null) {
+		// You may now connect a client to the MongoDB
+		// server bound to port 27017.
+		}
+		else
+			console.log('Database error: ', err.message);
 	});
 
 	/* CONNECT DATABASE */
