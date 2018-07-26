@@ -79,7 +79,7 @@
 				<a role="tab" aria-controls="panel-1"
 				   class="mdc-tab mdc-tab--active" href="#panel-1">Home</a>
 				<a role="tab" aria-controls="panel-2"
-				   class="mdc-tab" href="#panel-2">Analysis</a>
+				   class="mdc-tab" href="#panel-2">Control</a>
 				<span class="mdc-tab-bar__indicator"></span>
 			</nav>
 		</section>
@@ -90,7 +90,50 @@
 		
 		<div class="panels">
 			<div id="mainCardContainer" class="panel active sensor-card-container" role="tabpanel" aria-hidden="false"></div>
-			<p class="panel" id="panel-2" role="tabpanel" aria-hidden="true">Item Two</p>
+			<div id="controlOptions" class="panel" role="tabpanel" aria-hidden="true">
+				<div class="mdc-select mdc-select--box">
+					<select class="mdc-select__native-control">
+						<option value="relay1" selected>
+							Relay 1
+						</option>
+						<option value="relay2">
+							Relay 2
+						</option>
+						<option value="relay3">
+							Relay 3
+						</option>
+						<option value="relay4">
+							Relay 4
+						</option>
+						<label class="mdc-floating-label mdc-floating-label--float-above">Choose a relay</label>
+						<div class="mdc-line-ripple"></div>
+					</select>
+				</div>
+				
+				<div class="mdc-form-field">
+					<label for="basic-switch">1 am</label>
+					<div class="mdc-switch">
+						<input type="checkbox" id="basic-switch" class="mdc-switch__native-control" role="switch">
+						<div class="mdc-switch__background">
+							<div class="mdc-switch__knob"></div>
+						</div>
+					</div>
+					<label for="basic-switch">2 am</label>
+					<div class="mdc-switch">
+						<input type="checkbox" id="basic-switch" class="mdc-switch__native-control" role="switch">
+						<div class="mdc-switch__background">
+							<div class="mdc-switch__knob"></div>
+						</div>
+					</div>
+					<label for="basic-switch">3 am</label>
+					<div class="mdc-switch">
+						<input type="checkbox" id="basic-switch" class="mdc-switch__native-control" role="switch">
+						<div class="mdc-switch__background">
+							<div class="mdc-switch__knob"></div>
+						</div>
+					</div>
+				</div>
+			</div>
 			<p class="panel" id="panel-3" role="tabpanel" aria-hidden="true">Item Three</p>
 		</div>
 

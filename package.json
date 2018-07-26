@@ -4,6 +4,8 @@
   "description": "Optimal Loop Direction",
   "main": "OLDServer.js",
   "dependencies": {
+    "@material/form-field": "^0.37.1",
+    "@material/select": "^0.37.1",
     "express": "^4.16.2",
     "material-components-web": "^0.31.0",
     "mongod": "^2.0.0",

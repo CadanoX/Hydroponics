@@ -313,5 +313,15 @@ document.addEventListener("DOMContentLoaded", function(event)
 		menu.open = !menu.open;
 	});
 	
+	/*const MDCFormField = mdc.formField.MDCFormField;
+	mdc.form
+	const formField = new MDCFormField(document.querySelector('.mdc-form-field'));
+	*/
+	/*let selectEl = document.querySelector('.mdc-select')
+	const select = new mdc.select.MDCSelect(selectEl);
+	select.listen('change', () => {
+		let a = select;//alert(`Selected option at index ${select.selectedIndex} with value "${select.value}"`);
+	});*/
+	
 	initClock();	
 });
