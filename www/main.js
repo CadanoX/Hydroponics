@@ -11,9 +11,69 @@ var wantedValue = {
 	"light": 1250,
 	"SAL": 50
 };
+var currentRelay = 0;
+var relays = [
+	{
+		"type": "none",
+		"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+	},
+	{
+		"type": "none",
+		"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+	},
+	{
+		"type": "none",
+		"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+	},
+	{
+		"type": "none",
+		"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+	}
+];
 
 function isNumeric(n) {
     return !isNaN(parseFloat(n)) && isFinite(n);
+}
+
+function relayChanged(relay)
+{
+	currentRelay = relay.value - 1;
+	let timeButtons = document.querySelectorAll(".time-button");
+	for (var i = 0; i < timeButtons.length; i++)
+	{
+		if (relays[currentRelay].times[i] == 1)
+			timeButtons[i].classList.add("mdc-button--raised");
+		else
+			timeButtons[i].classList.remove("mdc-button--raised");
+	}
+}
+
+function toggleRelayTimer(button, time)
+{
+	//button.style.backgroundColor = "red";
+	button.classList.toggle("mdc-button--raised");
+	relays[currentRelay].times[time] = button.classList.contains("mdc-button--raised");
+}
+
+function clockSignalFullHour(hour)
+{
+	for(var i = 0; i < relays.length; i++)
+	{
+		if (relays[i].times[hour])
+		{
+			if (i == 0)
+				sendCommand('5', '1'); // set relay 1 to on
+			else if (i == 1)
+				sendCommand('6', '1'); // set relay 1 to on
+		}
+		else
+		{
+			if (i == 0)
+				sendCommand('5', '0'); // set relay 1 to off
+			else if (i == 1)
+				sendCommand('6', '0'); // set relay 1 to off
+		}
+	}
 }
 
 //var commandQueue = [];
@@ -313,15 +373,20 @@ document.addEventListener("DOMContentLoaded", function(event)
 		menu.open = !menu.open;
 	});
 	
-	/*const MDCFormField = mdc.formField.MDCFormField;
-	mdc.form
+	/*
+	const MDCFormField = mdc.form-field.MDCFormField;
 	const formField = new MDCFormField(document.querySelector('.mdc-form-field'));
 	*/
-	/*let selectEl = document.querySelector('.mdc-select')
+	
+	/*
+	let selectEl = document.querySelector('.mdc-select')
 	const select = new mdc.select.MDCSelect(selectEl);
 	select.listen('change', () => {
-		let a = select;//alert(`Selected option at index ${select.selectedIndex} with value "${select.value}"`);
-	});*/
+		let a = select;
+		alert(`Selected option at index ${select.selectedIndex} with value "${select.value}"`);
+	});
+	*/
+	
 	
 	initClock();	
 });

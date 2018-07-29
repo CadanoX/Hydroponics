@@ -3,7 +3,10 @@ function initClock()
 	var clockElement = document.getElementById( "clock" );
 
 	function updateClock(clock) {
-		clock.innerHTML = new Date().toLocaleTimeString();
+		let date = new Date();
+		clock.innerHTML = date.toLocaleTimeString();
+		if (date.getMinutes() == 0)
+			clockSignalFullHour(date.getHours());
 	}
 
 	setInterval(function () {

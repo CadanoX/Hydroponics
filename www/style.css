@@ -21,11 +21,11 @@ body {
 }
 
 .mdc-toolbar {
-	color: #f2dd6a
+	color: #f2dd6a;
 }
 
 #dyamic-nav-bar {
-	background-color: #222; /* tab bar under the toolbar */
+	background-color: var(--mdc-theme-background, #222); /* tab bar under the toolbar */
 }
 #dyamic-tab-bar {
 	/*background-color: black;*/ /* container around the elements of the tab bar */
@@ -38,6 +38,21 @@ body {
 .mdc-card {
 	color: #e6c300;
 }
+
+.timeButtonContainer {
+	background-color: var(--mdc-theme-background, #222);
+	margin: 10px;
+}
+
+/*.time-button {
+	background-color: var(--mdc-theme-background, #222) !important;
+	color: #f2dd6a !important;
+}
+
+.time-button .active {
+	background-color: #f2dd6a !important;
+	color: var(--mdc-theme-background, #222) !important;
+}*/
 
 .mdc-grid-tile {
 	--mdc-grid-list-tile-width: 300px;
