@@ -1,3 +1,4 @@
+/*
 var config = require('./config');
 
 // web server
@@ -10,19 +11,38 @@ const io = require('socket.io')(server)
 const Mongod = require('mongod');
 const MongoClient = require('mongodb').MongoClient;
 var DB = { initialized: false };
+*/
+import {config} from './config';
+import express from 'express';
+import http from'http';
+import io from 'socket.io';
+import mongod from'mongod';
+import * as mongodb from 'mongodb';
+import * as fs from'fs';
+import serialport from 'serialport/test';
+const FILENAME = typeof __filename !== 'undefined' ? __filename : (/^ +at (?:file:\/*(?=\/)|)(.*?):\d+:\d+$/m.exec(Error().stack) || '')[1];
+console.log(FILENAME)
+const DIRNAME = typeof __dirname !== 'undefined' ? __dirname : FILENAME.replace(/[\/\\][^\/\\]*?$/, '');
+console.log(DIRNAME)
+
+const app = express();
+const server = http.Server(app);
+const IO = io(server);
+const MongoClient = mongodb.MongoClient;
+var DB = { initialized: false };
 
 // arduino communication
 const mockArduino = config.arduino.mockingEnabled; // emulate an arduino, in case you got no arduino connected
-const SerialPort = mockArduino ? require("serialport/test") : require("serialport");
+//const SerialPort = mockArduino ? require("serialport/test") : require("serialport");
 var arduinoPortPath = config.arduino.portPath;
 var arduinoBaudrate = config.arduino.baudRate;
-const MockBinding = SerialPort.Binding; // Test base when no arduino is connected
+const MockBinding = serialport.Binding; // Test base when no arduino is connected
 
 // file system
-const fs = require('fs');
+//const fs = require('fs');
 
 /* RUN AND CONNECT TO DATABASE */
-const dbServer = new Mongod(27017);
+const dbServer = new mongod(27017);
 if (dbServer.isRunning)
 {
 	dbServer.open((err) => {
@@ -77,15 +97,16 @@ function restoreMeasurements(measure)
 }
 
 /* CREATE WEB SERVER */
-app.use(express.static(__dirname + '/www')); // show where the web site lies
-app.use('/scripts', express.static(__dirname + '/node_modules/material-components-web/dist/'));
+app.use(express.static('www')); // show where the web site lies
+app.use('/scripts', express.static('node_modules/material-components-web/dist/'));
 app.get('/', handler);
 server.listen(80, () => console.log('OLD server running on port 80!'));
 
 function handler (req, res)
 {
 	//read file index.html in public folder
-	res.sendfile(__dirname + 'index.html');
+	//res.sendFile(DIRNAME + '/index.html');
+	res.sendFile('index.html');
 }
 
 /* DEFINE ARDUINO BEHAVIOUR */
@@ -119,7 +140,7 @@ function onDataReceived(data)
 		}
 		if (measures)
 		{
-			io.emit('new measurements', measures);
+			IO.emit('new measurements', measures);
 			if (measures.Temp)
 				storeMeasurement("Temp", measures.Temp);
 		}
@@ -138,11 +159,11 @@ if (mockArduino)
 		"}"), 2000);
 }
 
-const arduino = new SerialPort(arduinoPortPath, {
+const arduino = new serialport(arduinoPortPath, {
 	baudRate: arduinoBaudrate
 });
 
-const arduinoParser = arduino.pipe(new SerialPort.parsers.Readline({ delimiter: '\r\n' }));
+const arduinoParser = arduino.pipe(new serialport.parsers.Readline({ delimiter: '\r\n' }));
 
 // WHEN CONNECTION IS ESTABLISHED
 arduino.on("open", function ()
@@ -181,7 +202,7 @@ arduino.on('close', function()
 });
 
 // WebSocket Connection
-io.sockets.on('connection', function (socket)
+IO.sockets.on('connection', function (socket)
 {
 	console.log("Client connected");
 	socket.on('new command', function(command)

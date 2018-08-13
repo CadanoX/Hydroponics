@@ -1,3 +1,5 @@
+//import nouislider from 'nouislider';
+
 var socket;
 var buttonIsOn = [0, 0, 0, 0]; // keep track of the buttons for sockets and pumps
 var wantedValue = {
@@ -373,6 +375,16 @@ document.addEventListener("DOMContentLoaded", function(event)
 		menu.open = !menu.open;
 	});
 	
+	var slider = document.getElementById('slider');
+
+noUiSlider.create(slider, {
+	start: [20, 80],
+	connect: true,
+	range: {
+		'min': 0,
+		'max': 100
+	}
+});
 	/*
 	const MDCFormField = mdc.form-field.MDCFormField;
 	const formField = new MDCFormField(document.querySelector('.mdc-form-field'));

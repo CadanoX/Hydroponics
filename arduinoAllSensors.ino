@@ -17,7 +17,7 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
-// EC and PH are on Hardware Serials 2 and 3
+// EC and PH are on Hardware Serials 2 (pin 17,16) and 3 (pin 15,14)
 #define BAUDRATE_PH_SENSOR 9600 // Serial3
 #define BAUDRATE_EC_SENSOR 9600 // Serial2
 #define DHTRx 8
