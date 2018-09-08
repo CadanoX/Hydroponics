@@ -4,24 +4,17 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width,initial-scale=1">
 		<title>OLD</title>
-		<!--
-		<link rel="stylesheet" href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css">
-		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
-		<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-		-->
+		
 		<link rel="stylesheet" href="scripts/material-components-web.min.css">
 		<link rel="stylesheet" href="Google_MDC/css.css">
 		<link rel="stylesheet" href="Google_MDC/icon.css">
+		<link rel="stylesheet" href="noUiSlider.11.1.0/nouislider.css">
+		<link rel="stylesheet" href="style.css">
 		
-		<link rel="stylesheet" type="text/css" href="style.css">
-		
-		<!--
-		<script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
-		-->
-		<script src="scripts/material-components-web.min.js"></script>
-		<script>window.mdc.autoInit();</script>
+		<script src="scripts/material-components-web.js"></script>
 		
 		<script src="socket.io/socket.io.js"></script>
+		<script src="noUiSlider.11.1.0/nouislider.js"></script>
 		<script src="clock.js"></script>
 		<script src="cards.js"></script>
 		<script src="control.js"></script>
@@ -91,79 +84,13 @@
 		<div class="panels">
 			<div id="mainCardContainer" class="panel active sensor-card-container" role="tabpanel" aria-hidden="false"></div>
 			<div id="controlOptions" class="panel" role="tabpanel" aria-hidden="true">
-				<div class="mdc-select mdc-select--box">
-					<select class="mdc-select__native-control" onChange="relayChanged(this)">
-						<option value="1" selected>
-							Relay 1
-						</option>
-						<option value="2">
-							Relay 2
-						</option>
-						<!--
-						<option value="3">
-							Relay 3
-						</option>
-						<option value="4">
-							Relay 4
-						</option>
-						-->
-						<label class="mdc-floating-label mdc-floating-label--float-above">Choose a relay</label>
-						<div class="mdc-line-ripple"></div>
-					</select>
-				</div>
-				
-				<!--
-				<div class="mdc-form-field">
-					<label for="basic-switch">1 am</label>
-					<div class="mdc-switch">
-						<input type="checkbox" id="basic-switch" class="mdc-switch__native-control" role="switch">
-						<div class="mdc-switch__background">
-							<div class="mdc-switch__knob"></div>
-						</div>
-					</div>
-					<label for="basic-switch">2 am</label>
-					<div class="mdc-switch">
-						<input type="checkbox" id="basic-switch" class="mdc-switch__native-control" role="switch">
-						<div class="mdc-switch__background">
-							<div class="mdc-switch__knob"></div>
-						</div>
-					</div>
-					<label for="basic-switch">3 am</label>
-					<div class="mdc-switch">
-						<input type="checkbox" id="basic-switch" class="mdc-switch__native-control" role="switch">
-						<div class="mdc-switch__background">
-							<div class="mdc-switch__knob"></div>
-						</div>
-					</div>
-				</div>
-				-->
-				
-				<div class="timeButtonContainer">
-					<button class="mdc-button time-button" type="button" onclick="toggleRelayTimer(this, 0)">12am</button>
-					<button class="mdc-button time-button" type="button" onclick="toggleRelayTimer(this, 1)">1am</button>
-					<button class="mdc-button time-button" type="button" onclick="toggleRelayTimer(this, 2)">2am</button>
-					<button class="mdc-button time-button" type="button" onclick="toggleRelayTimer(this, 3)">3am</button>
-					<button class="mdc-button time-button" type="button" onclick="toggleRelayTimer(this, 4)">4am</button>
-					<button class="mdc-button time-button" type="button" onclick="toggleRelayTimer(this, 5)">5am</button>
-					<button class="mdc-button time-button" type="button" onclick="toggleRelayTimer(this, 6)">6am</button>
-					<button class="mdc-button time-button" type="button" onclick="toggleRelayTimer(this, 7)">7am</button>
-					<button class="mdc-button time-button" type="button" onclick="toggleRelayTimer(this, 8)">8am</button>
-					<button class="mdc-button time-button" type="button" onclick="toggleRelayTimer(this, 9)">9am</button>
-					<button class="mdc-button time-button" type="button" onclick="toggleRelayTimer(this, 10)">10am</button>
-					<button class="mdc-button time-button" type="button" onclick="toggleRelayTimer(this, 11)">11am</button>
-					<button class="mdc-button time-button" type="button" onclick="toggleRelayTimer(this, 12)">12pm</button>
-					<button class="mdc-button time-button" type="button" onclick="toggleRelayTimer(this, 13)">1pm</button>
-					<button class="mdc-button time-button" type="button" onclick="toggleRelayTimer(this, 14)">2pm</button>
-					<button class="mdc-button time-button" type="button" onclick="toggleRelayTimer(this, 15)">3pm</button>
-					<button class="mdc-button time-button" type="button" onclick="toggleRelayTimer(this, 16)">4pm</button>
-					<button class="mdc-button time-button" type="button" onclick="toggleRelayTimer(this, 17)">5pm</button>
-					<button class="mdc-button time-button" type="button" onclick="toggleRelayTimer(this, 18)">6pm</button>
-					<button class="mdc-button time-button" type="button" onclick="toggleRelayTimer(this, 19)">7pm</button>
-					<button class="mdc-button time-button" type="button" onclick="toggleRelayTimer(this, 20)">8pm</button>
-					<button class="mdc-button time-button" type="button" onclick="toggleRelayTimer(this, 21)">9pm</button>
-					<button class="mdc-button time-button" type="button" onclick="toggleRelayTimer(this, 22)">10pm</button>
-					<button class="mdc-button time-button" type="button" onclick="toggleRelayTimer(this, 23)">11pm</button>
-				</div>
+				<table style="width:100%">
+					<tr>
+						<th>Device</th>
+						<th>is controlled by</th> 
+						<th>option</th>
+					</tr>
+				</table>
 			</div>
 			<p class="panel" id="panel-3" role="tabpanel" aria-hidden="true">Item Three</p>
 		</div>
@@ -197,4 +124,6 @@
 	</aside>
 	
   </body>
+  
+		<script>window.mdc.autoInit();</script>
 </html>

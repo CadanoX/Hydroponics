@@ -1,34 +1,108 @@
-//import nouislider from 'nouislider';
-
 var socket;
 var buttonIsOn = [0, 0, 0, 0]; // keep track of the buttons for sockets and pumps
-var wantedValue = {
-	"tempAir": 42.5,
-	"tempWater": 30,
-	"humidity": 55,
-	"CO2": 2500,
-	"O2": 18,
-	"EC": 2500,
-	"PH": 7,
-	"light": 1250,
-	"SAL": 50
+var cards = {};
+
+var values = {
+	"Temp": {
+		"min": -40,
+		"max": 125,
+		"name": "AirTemp",
+		"scale": [0, 33, 38, 47, 52, 80],
+		"unit": '&#8451;',
+		"wanted": 42.5
+	},
+	"WaterTemp": {
+		"min": 0,
+		"max": 60,
+		"name": "WaterTemp",
+		"scale": [0,20,25,35,40,60],
+		"unit": '&#8451;',
+		"wanted": 30
+	},
+	"Humidity":  {
+		"decimals": 0,
+		"min": 30,
+		"max": 80,
+		"name": "Humidity",
+		"scale": [30,45,50,60,65,80],
+		"unit": '%',
+		"wanted": 55
+	},
+	"CO2": {
+		"decimals": 0,
+		"min": 0,
+		"max": 5000,
+		"name": "CO2",
+		"scale": [0,1500,2100,2900,3500,5000],
+		"unit": 'ppm',
+		"wanted": 2500
+	},
+	"O2": {
+		"min": 0,
+		"max": 36,
+		"name": "Dissolved O2",
+		"scale": [0,12,15,21,23,36],
+		"unit": 'mg/l',
+		"wanted": 18
+	},
+	"EC": {
+		"min": 0,
+		"max": 5000,
+		"name": "Conductivity",
+		"scale": [0,1500,2100,2900,3500,5000],
+		"unit": '&micro;S/cm',
+		"wanted": 2500
+	},
+	"PH": {
+		"min": 0,
+		"max": 14,
+		"name": "pH",
+		"scale": [0,5,6.6,7.4,9,14],
+		"unit": '/10',
+		"wanted": 7
+	},
+	"light": {
+		"decimals": 0,
+		"min": 0,
+		"max": 2500,
+		"name": "Light PAR",
+		"scale": [0,800,1100,1400,1700,2500],
+		"unit": '&micro;mol m<sup>-2</sup>s<sup>-1</sup>',
+		"wanted": 1250
+	},
+	"SAL": {
+		"decimals": 2,
+		"min": 0,
+		"max": 100,
+		"name": "SAR",
+		"scale": [0,40,45,55,60,100],
+		"unit": 'g/kg',
+		"wanted": 50
+	}
 };
-var currentRelay = 0;
 var relays = [
 	{
 		"type": "none",
+		"control": "Time",
+		"scales": {},
 		"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 	},
 	{
 		"type": "none",
+		"control": "Time",
+		"scales": {},
 		"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 	},
 	{
 		"type": "none",
+		"control": "Time",
+		"scales": {},
 		"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 	},
 	{
 		"type": "none",
+		"control": "Time",
+		"scales": {},
 		"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 	}
 ];
@@ -37,9 +111,40 @@ function isNumeric(n) {
     return !isNaN(parseFloat(n)) && isFinite(n);
 }
 
-function relayChanged(relay)
+function relayOptionChanged(relay, option)
 {
-	currentRelay = relay.value - 1;
+
+	relays[relay].control = option.value;
+	const relayOptionDiv = document.querySelector("#device-" + relay + " .option");
+
+	if (option.value == "Time")
+	{
+		relayOptionDiv.querySelector(".timeButtonContainer").style.display = "block";
+		relayOptionDiv.querySelector(".optionSlider").style.display = "none";
+	}
+	else
+	{
+		relayOptionDiv.querySelector(".timeButtonContainer").style.display = "none";
+		const slider = relayOptionDiv.querySelector(".optionSlider");
+		slider.style.display = "block";
+		if (!relays[relay].scales[option.value])
+			// copy scale from default to specific device
+			relays[relay].scales[option.value] = values[option.value].scale.slice(0);
+		const scale = relays[relay].scales[option.value];
+		const handles = scale.slice(1, scale.length-1);
+
+		slider.noUiSlider.updateOptions({
+			start: handles,
+			connect: (new Array(handles.length+1)).fill(true),
+			range: {
+				'min': scale[0],
+				'max': scale[scale.length-1]
+			}
+		}, true);
+	}
+	
+	//
+	/*
 	let timeButtons = document.querySelectorAll(".time-button");
 	for (var i = 0; i < timeButtons.length; i++)
 	{
@@ -48,34 +153,43 @@ function relayChanged(relay)
 		else
 			timeButtons[i].classList.remove("mdc-button--raised");
 	}
+	*/
 }
 
-function toggleRelayTimer(button, time)
+function toggleRelayTimer(button)
 {
-	//button.style.backgroundColor = "red";
 	button.classList.toggle("mdc-button--raised");
-	relays[currentRelay].times[time] = button.classList.contains("mdc-button--raised");
+	relays[button.device].times[button.time] = button.classList.contains("mdc-button--raised");
 }
 
+//TODO: move clock signals to server !! or they will be triggered by each client
 function clockSignalFullHour(hour)
 {
 	for(var i = 0; i < relays.length; i++)
 	{
-		if (relays[i].times[hour])
+		if (relays[i].control == "Time")
 		{
-			if (i == 0)
-				sendCommand('5', '1'); // set relay 1 to on
-			else if (i == 1)
-				sendCommand('6', '1'); // set relay 1 to on
-		}
-		else
-		{
-			if (i == 0)
-				sendCommand('5', '0'); // set relay 1 to off
-			else if (i == 1)
-				sendCommand('6', '0'); // set relay 1 to off
+			if (relays[i].times[hour])
+			{
+				if (i == 0)
+					sendCommand('5', '1'); // set relay 1 to on
+				else if (i == 1)
+					sendCommand('6', '1'); // set relay 1 to on
+			}
+			else
+			{
+				if (i == 0)
+					sendCommand('5', '0'); // set relay 1 to off
+				else if (i == 1)
+					sendCommand('6', '0'); // set relay 1 to off
+			}
 		}
 	}
+}
+
+function clockSignalTenMinutes()
+{
+	socket.emit('clockTen');
 }
 
 //var commandQueue = [];
@@ -155,168 +269,36 @@ document.addEventListener("DOMContentLoaded", function(event)
 	socket = io();
 	
 	let cardContainer = document.getElementById('mainCardContainer');
-	let cardTempAir = new Card(cardContainer, 'AirTemp', '&#8451;', -40, 125);
-	let cardTempWater = new Card(cardContainer, 'WaterTemp', '&#8451;', 0, 60);
-	let cardHumidity = new Card(cardContainer, 'Humidity', '%', 30, 80, 0);
-	let cardCO2 = new Card(cardContainer, 'CO2', 'ppm', 0, 5000, 0);
-	let cardO2 = new Card(cardContainer, 'Dissolved O2', 'mg/l', 0, 36);
-	let cardEC = new Card(cardContainer, 'Conductivity', '&micro;S/cm', 0, 5000, 1, [0,1500,2100,2900,3500,5000]);
-	let cardPh = new Card(cardContainer, 'pH', '/10', 0, 14, 1, [0,5,6.6,7.4,9,14]);
-	let cardLight = new Card(cardContainer, 'Light PAR', '&micro;mol m<sup>-2</sup>s<sup>-1</sup>', 0, 2500, 0);
-	let cardSAL = new Card(cardContainer, 'SAL', 'g/kg', 0, 36, 2)
-	
+	for (var v in values)
+	{
+		cards[v] = new Card(cardContainer, values[v].name, values[v].unit, values[v].min, values[v].max, values[v].decimals, values[v].scale);
+	}
 	// react when the user changes the sliders value
-	cardTempAir.get().addEventListener('valueChanged', function(e)
+	for (var c in cards)
 	{
-		if (workaroundSliderJustFired)
+		cards[c].get().addEventListener('valueChanged', function(e)
 		{
-			workaroundSliderJustFired = false;
-			return;
-		}
-		wantedValue.tempAir = cardTempAir.getSliderValue();
-		userChangedSlider("tempAir", cardTempAir.getSliderValue());
-		workaroundSliderJustFired = true;
-	});
-	cardTempWater.get().addEventListener('valueChanged', function(e)
-	{
-		if (workaroundSliderJustFired)
-		{
-			workaroundSliderJustFired = false;
-			return;
-		}
-		wantedValue.tempWater = cardTempWater.getSliderValue();
-		userChangedSlider("tempWater", cardTempWater.getSliderValue());
-		workaroundSliderJustFired = true;
-	});
-	cardHumidity.get().addEventListener('valueChanged', function(e)
-	{
-		if (workaroundSliderJustFired)
-		{
-			workaroundSliderJustFired = false;
-			return;
-		}
-		wantedValue.humidity = cardHumidity.getSliderValue();
-		userChangedSlider("humidity", cardHumidity.getSliderValue());
-		workaroundSliderJustFired = true;
-	});
-	cardCO2.get().addEventListener('valueChanged', function(e)
-	{
-		if (workaroundSliderJustFired)
-		{
-			workaroundSliderJustFired = false;
-			return;
-		}
-		wantedValue.CO2 = cardCO2.getSliderValue();
-		userChangedSlider("CO2", cardCO2.getSliderValue());
-		workaroundSliderJustFired = true;
-	});
-	cardO2.get().addEventListener('valueChanged', function(e)
-	{
-		if (workaroundSliderJustFired)
-		{
-			workaroundSliderJustFired = false;
-			return;
-		}
-		wantedValue.O2 = cardO2.getSliderValue();
-		userChangedSlider("O2", cardO2.getSliderValue());
-		workaroundSliderJustFired = true;
-	});
-	cardEC.get().addEventListener('valueChanged', function(e)
-	{
-		if (workaroundSliderJustFired)
-		{
-			workaroundSliderJustFired = false;
-			return;
-		}
-		wantedValue.EC = cardEC.getSliderValue();
-		/* TODO: change the way the scale is given (e.g. without first and last value, because card has it already? or remove those 2 parameters from the card)
-			maybe give the differences from the wanted value? (are they always symmetric?)
-			make sure that wantedValue + X is not bigger than the maximum !!
-		*/
-		cardEC.setValueScale([
-			0,
-			wantedValue.EC - 1000,
-			wantedValue.EC - 400,
-			wantedValue.EC + 400,
-			wantedValue.EC + 1000,
-			5000]);
-		userChangedSlider("EC", cardEC.getSliderValue());
-		workaroundSliderJustFired = true;
-	});
-	cardPh.get().addEventListener('valueChanged', function(e)
-	{
-		if (workaroundSliderJustFired)
-		{
-			workaroundSliderJustFired = false;
-			return;
-		}
-		wantedValue.PH = cardPh.getSliderValue();
-		cardPh.setValueScale([
-			0,
-			wantedValue.PH - 2,
-			wantedValue.PH - 0.4,
-			wantedValue.PH + 0.4,
-			wantedValue.PH + 2,
-			14]);
-		userChangedSlider("PH", cardPh.getSliderValue());
-		workaroundSliderJustFired = true;
-	});
-	cardLight.get().addEventListener('valueChanged', function(e)
-	{
-		if (workaroundSliderJustFired)
-		{
-			workaroundSliderJustFired = false;
-			return;
-		}
-		wantedValue.light = cardLight.getSliderValue();
-		userChangedSlider("light", cardLight.getSliderValue());
-		workaroundSliderJustFired = true;
-	});
-	
-	cardSAL.get().addEventListener('valueChanged', function(e)
-	{
-		if (workaroundSliderJustFired)
-		{
-			workaroundSliderJustFired = false;
-			return;
-		}
-		wantedValue.SAL = cardSAL.getSliderValue();
-		userChangedSlider("SAL", cardSAL.getSliderValue());
-		workaroundSliderJustFired = true;
-	});
+			if (workaroundSliderJustFired)
+			{
+				workaroundSliderJustFired = false;
+				return;
+			}
+			values[c].wanted = cards[c].getSliderValue();
+			userChangedSlider(c, cards[c].getSliderValue());
+			workaroundSliderJustFired = true;
+		});
+	}
 	
 	socket.on('new measurements', onMeasuresReceived);
 	function onMeasuresReceived(measures)
 	{
-		if (!!measures.WaterTemp)
+		for (var m in measures)
 		{
-			cardTempWater.setValue(measures.WaterTemp);
-			measurementChanged("tempWater", measures.WaterTemp);
-		}
-		if (!!measures.Temp)
-		{
-			cardTempAir.setValue(measures.Temp);
-			measurementChanged("tempAir", measures.Temp);
-		}
-		if (!!measures.EC)
-		{
-			cardEC.setValue(measures.EC);
-			measurementChanged("EC", measures.EC);
-		}
-		if (!!measures.Humidity)
-		{
-			cardHumidity.setValue(measures.Humidity);
-			measurementChanged("humidity", measures.Humidity);
-		}
-		if (!!measures.PH)
-		{
-			cardPh.setValue(measures.PH);
-			measurementChanged("PH", measures.PH);
-		}
-		if (!!measures.SAL)
-		{
-			cardSAL.setValue(measures.SAL);
-			measurementChanged("SAL", measures.SAL);
+			if (!!cards[m])
+			{
+				cards[m].setValue(measures[m]);
+				measurementChanged(m, measures[m])
+			}
 		}
 	}
 	
@@ -340,6 +322,10 @@ document.addEventListener("DOMContentLoaded", function(event)
 		let newActivePanel = panels.querySelector('.panel:nth-child(' + (index + 1) + ')');
 		if (newActivePanel) {
 			newActivePanel.classList.add('active');
+		}
+		
+		if (index == 1)
+		{
 		}
 	}
 
@@ -375,19 +361,106 @@ document.addEventListener("DOMContentLoaded", function(event)
 		menu.open = !menu.open;
 	});
 	
-	var slider = document.getElementById('slider');
+	// set up controls
+	const controls = document.querySelector("#controlOptions table");
+	for (var r in relays)
+	{
+		const row = document.createElement("tr");
+		row.id = "device-" + r;
+		const col1 = document.createElement("td");
+		const col2 = document.createElement("td");
+		const col3 = document.createElement("td");
+		controls.appendChild(row);
+		row.appendChild(col1);
+		row.appendChild(col2);
+		row.appendChild(col3);
 
-noUiSlider.create(slider, {
-	start: [20, 80],
-	connect: true,
-	range: {
-		'min': 0,
-		'max': 100
+		col1.innerText = "Relay " + r;
+		col2.innerHTML =`
+			<div class="mdc-select mdc-select--box">
+				<select class="mdc-select__native-control" onchange="relayOptionChanged(${r}, this)">
+					<option value="Time" selected>Time</option>
+					<option value="Temp">Air temp</option>
+					<option value="WaterTemp">Water temp</option>
+					<option value="Humidity">Humidity</option>
+					<option value="CO2">CO2</option>
+					<option value="O2">O2</option>
+					<option value="EC">EC</option>
+					<option value="PH">PH</option>
+					<option value="Light">Light</option>
+					<option value="SAL">SAL</option>
+					
+					<label class="mdc-floating-label mdc-floating-label--float-above">Choose an option</label>
+					<div class="mdc-line-ripple"></div>
+				</select>
+			</div>
+		`;
+		col3.classList += "option";
+
+		// create buttons for controlling the time dependency
+		const timeButtonContainer = document.createElement("div");
+		timeButtonContainer.classList.add("timeButtonContainer");
+		col3.appendChild(timeButtonContainer);
+		const timeButtonContainerMorning = document.createElement("div");
+		timeButtonContainer.appendChild(timeButtonContainerMorning);
+		const timeButtonContainerEvening = document.createElement("div");
+		timeButtonContainer.appendChild(timeButtonContainerEvening);
+
+		for (var i = 0; i < 24; i++)
+		{
+			const timeButton = document.createElement("div");
+			timeButton.classList.add("mdc-button");
+			timeButton.classList.add("time-button");
+			timeButton.type = "button";
+			timeButton.time = i;
+			timeButton.device = r;
+			timeButton.onclick = () => toggleRelayTimer(timeButton);
+			timeButton.innerHTML = ((i + 11) % 12 + 1) + ((i < 12) ? "am" : "pm");
+			(i < 12) ? timeButtonContainerMorning.appendChild(timeButton) : timeButtonContainerEvening.appendChild(timeButton);
+		}
+
+		// create slider for controlling the dependency of measured values
+		const slider = document.createElement("div");
+		col3.appendChild(slider);
+		slider.classList.add("optionSlider");
+		slider.style.display = "none";
+		noUiSlider.create(slider, {
+			start: [10, 30, 50, 80],
+			connect: [true, true, true, true, true],
+			tooltips: [ true, true, true, true ],	
+			range: {
+				'min': 0,
+				'max': 100
+			},
+			pips: {
+				mode: 'count',
+				values: 5,
+				density: 2.5
+			}
+		});
+		slider.noUiSlider.device = r;
+		slider.noUiSlider.on('change', function()
+		{
+			const option = relays[this.device].control;
+			// replace the inner values of the devices scale by the new scale
+			let arr = relays[this.device].scales[option];
+			Array.prototype.splice.apply(arr, [1, this.get().length].concat(this.get()));
+			// convert the array to an array of numbers
+			for (var i = 0; i < arr.length; i++) 
+				arr[i] = +arr[i];
+			// copy the new array to the default values, so that they are used as the new default
+			values[option].scale = arr.slice(0);
+			// set the value scale of the according measurement card
+			cards[option].setValueScale(arr);
+		});
+
 	}
-});
+
+
 	/*
-	const MDCFormField = mdc.form-field.MDCFormField;
-	const formField = new MDCFormField(document.querySelector('.mdc-form-field'));
+	const MDCFormField = mdc.formField.MDCFormField;
+	let formFieldDiv = document.querySelector('#controlOptions .mdc-form-field');
+	let formField = new MDCFormField(formFieldDiv);
 	*/
 	
 	/*

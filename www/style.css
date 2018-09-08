@@ -39,10 +39,36 @@ body {
 	color: #e6c300;
 }
 
+#controlOptions table {
+	/*border: 1px solid #222;*/
+	color: #e6c300;
+	margin: 20px;
+}
+
+#controlOptions table td {
+	text-align: center;
+	/*vertical-align: top;*/
+}
+
+#controlOptions table th:nth-child(3) {
+	width: 75vw;
+}
+
 .timeButtonContainer {
 	background-color: var(--mdc-theme-background, #222);
 	margin: 10px;
 }
+
+.optionSlider {
+	margin-bottom: 20px;
+}
+
+.optionSlider .noUi-connect:nth-child(1) { background-color: #e6550d; }
+.optionSlider .noUi-connect:nth-child(2) { background-color: #fdae6b; }
+/*.optionSlider .noUi-connect:nth-child(3) { background-color: #fee6ce; }*/
+.optionSlider .noUi-connect:nth-child(3) { background-color: #00B264; }
+.optionSlider .noUi-connect:nth-child(4) { background-color: #fdae6b; }
+.optionSlider .noUi-connect:nth-child(5) { background-color: #e6550d; }
 
 /*.time-button {
 	background-color: var(--mdc-theme-background, #222) !important;
@@ -65,6 +91,13 @@ body {
   display: flex;
 }
 
+.noUi-tooltip {
+    display: none;
+}
+.noUi-active .noUi-tooltip {
+    display: block;
+}
+
 .sensor-card-container {
 	align-content: center;
 	flex-flow: row wrap;
@@ -81,7 +114,6 @@ body {
 	position: relative;
 }
 .sensor-card .mdc-card__footer {
-	background-color: lightgreen;
 	padding: 1vh;
 	position: relative;
 }

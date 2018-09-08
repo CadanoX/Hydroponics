@@ -1,4 +1,4 @@
-/*
+//*
 var config = require('./config');
 
 // web server
@@ -6,40 +6,37 @@ const express = require('express')
 const app = express()
 const server = require('http').Server(app);
 // client communication
-const io = require('socket.io')(server)
+const IO = require('socket.io')(server)
 // database
-const Mongod = require('mongod');
+const mongod = require('mongod');
 const MongoClient = require('mongodb').MongoClient;
 var DB = { initialized: false };
-*/
+const fs = require('fs');
+
+/*/
 import {config} from './config';
 import express from 'express';
 import http from'http';
 import io from 'socket.io';
 import mongod from'mongod';
 import * as mongodb from 'mongodb';
-import * as fs from'fs';
+import fs from'fs';
 import serialport from 'serialport/test';
-const FILENAME = typeof __filename !== 'undefined' ? __filename : (/^ +at (?:file:\/*(?=\/)|)(.*?):\d+:\d+$/m.exec(Error().stack) || '')[1];
-console.log(FILENAME)
-const DIRNAME = typeof __dirname !== 'undefined' ? __dirname : FILENAME.replace(/[\/\\][^\/\\]*?$/, '');
-console.log(DIRNAME)
 
 const app = express();
 const server = http.Server(app);
 const IO = io(server);
 const MongoClient = mongodb.MongoClient;
 var DB = { initialized: false };
+//*/
 
 // arduino communication
 const mockArduino = config.arduino.mockingEnabled; // emulate an arduino, in case you got no arduino connected
-//const SerialPort = mockArduino ? require("serialport/test") : require("serialport");
+const serialport = mockArduino ? require("serialport/test") : require("serialport");
 var arduinoPortPath = config.arduino.portPath;
 var arduinoBaudrate = config.arduino.baudRate;
 const MockBinding = serialport.Binding; // Test base when no arduino is connected
-
-// file system
-//const fs = require('fs');
+const readMeasurementsOnly = config.arduino.readMeasurementsOnly;
 
 /* RUN AND CONNECT TO DATABASE */
 const dbServer = new mongod(27017);
@@ -96,6 +93,41 @@ function restoreMeasurements(measure)
 	}
 }
 
+const dataDir = './data';
+var dataFile;
+changeDataFile();
+function changeDataFile()
+{
+	dataFile = 'data' + new Date().getTime();
+}
+function directoryExists(filePath)
+{
+    try {
+        return fs.statSync(filePath).isDirectory();
+    } catch (err) {
+        return false;
+    }
+}
+
+if (!directoryExists(dataDir))
+    fs.mkdirSync(dataDir);
+
+function storeMeasurementsInFile(measures)
+{
+    const logFilePath = dataDir + '/' + dataFile + '.csv';
+    const timestamp = new Date().toLocaleString();
+	for (var m in measures)
+	{
+		const data = `${timestamp},${m},${measures[m]}\n`;
+		fs.appendFile(logFilePath, data, (error) =>
+		{
+			if (error) {
+				console.error(`Write error to ${dataFile}: ${error.message}`);
+			}
+		});
+	}
+}
+
 /* CREATE WEB SERVER */
 app.use(express.static('www')); // show where the web site lies
 app.use('/scripts', express.static('node_modules/material-components-web/dist/'));
@@ -141,8 +173,9 @@ function onDataReceived(data)
 		if (measures)
 		{
 			IO.emit('new measurements', measures);
-			if (measures.Temp)
-				storeMeasurement("Temp", measures.Temp);
+			/*if (measures.Temp)
+				storeMeasurement("Temp", measures.Temp);*/
+			storeMeasurementsInFile(measures);
 		}
 	}
 }
@@ -207,6 +240,9 @@ IO.sockets.on('connection', function (socket)
 	console.log("Client connected");
 	socket.on('new command', function(command)
 	{
+		if (readMeasurementsOnly)
+			return;
+			
 		let commandString = command.receiver + " " + command.name;
 		if (commandString == "")
 			console.log("Command is empty");
@@ -215,4 +251,5 @@ IO.sockets.on('connection', function (socket)
 			
 		writeToArduino(commandString);
 	});
+	socket.on('clockTen', changeDataFile);
 });

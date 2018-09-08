@@ -89,34 +89,57 @@ function userChangedSlider(sliderName, value)
 
 function measurementChanged(measurement, value)
 {
+	for (r in relays)
+	{
+		if (relays[r].control == measurement)
+		{
+			if (relays[r].isActive)
+				return;
+
+			if (value < relays[r].scales[measurement][2]
+				|| value > relays[r].scales[measurement][3])
+			{
+				// activate relay
+				sendCommand("" + r + 4, "1");
+				relays[r].isActive = true;
+				// deactivate after 5 seconds
+				var currentRelay = r;
+				setTimeout( function() {
+					sendCommand("" + r + 4, "0");
+					relays[currentRelay].isActive = false;
+				}, 5000);
+			}
+		}
+	}
+
 	switch(measurement)
 	{
-		case "tempAir":
+		case "Temp":
 		break;
-		case "tempWater":
+		case "WaterTemp":
 		break;
-		case "humidity":
+		case "Humidity":
 		break;
 		case "EC":
-			if (value < wantedValue.EC - 450)
+			if (value < values.EC.scale[2])
 				sendCommand("3", "1,3000");
-			else if (value > wantedValue.EC + 450)
+			else if (value > values.EC.scale[4])
 				sendCommand("4", "1,3000");
 		break;
 		case "PH":
-			if (value < wantedValue.PH - 2)
+			if (value < values.PH.scale[1])
 				sendCommand("3", "1,2000");
-			else if (value < wantedValue.PH - 0.4)
+			else if (value < values.PH.scale[2])
 				sendCommand("3", "1,1000");
-			else if (value > wantedValue.PH + 2)
+			else if (value > values.PH.scale[4])
 				sendCommand("4", "1,2000");
-			else if (value > wantedValue.PH + 0.4)
+			else if (value > values.PH.scale[3])
 				sendCommand("4", "1,1000");
 		break;
 		case "SAL":
-			if (value < wantedValue.SAL)
+			if (value < values.SAL.wanted)
 				console.log("SAL is smaller than the user wants");
-			else if (value > wantedValue.SAL)
+			else if (value > values.SAL.wanted)
 				console.log("SAL is bigger than the user wants");
 			else
 				console.log("SAL is perfect");

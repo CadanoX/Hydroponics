@@ -16,7 +16,6 @@
 		let sliderDiv = card.querySelector(".sensor-card-slider");
 		let outputDiv = card.querySelector(".sensor-card-form-field");
 		let valueDiv = card.querySelector(".sensor-card__value");
-		let slider;
 		
 		// hide slider, show button -- this needs to be delayed, to make positioning and sizes right
 		setTimeout(function() {
@@ -25,7 +24,7 @@
 		}, 0);
 			
 		let {MDCSlider} = mdc.slider;
-		slider = new MDCSlider(sliderDiv);
+		let slider = new MDCSlider(sliderDiv);
 		let valueChangedEvent = new CustomEvent('valueChanged', {detail: { value: slider.value }});
 		
 		/* values don't need to be set, if they are defined in DOM already
@@ -119,10 +118,13 @@
 					var mid = (low + high) >>> 1;
 					if (array[mid] < value)
 						low = mid + 1;
-					else high = mid;
+					else
+						high = mid;
 				}
 				return low;
 			})(valueScale, valueDiv.innerHTML);
+			if (sortedIndex < 1 || sortedIndex > valueScale.length)
+				console.log("value is out of scale");
 			
 			if (valueScale.length == 6)
 			{
@@ -130,14 +132,14 @@
 				{
 					case 1:
 					case 5:
-						cardFooter.style.backgroundColor = 'red';
+						cardFooter.style.backgroundColor = '#e6550d';
 						break;
 					case 2:
 					case 4:
-						cardFooter.style.backgroundColor = 'orange';
+						cardFooter.style.backgroundColor = '#fdae6b';
 						break;
 					case 3:
-						cardFooter.style.backgroundColor = 'green';
+						cardFooter.style.backgroundColor = '#00B264';
 						break;
 					default:
 						cardFooter.style.backgroundColor = 'gray';
