@@ -20,14 +20,18 @@
 // EC and PH are on Hardware Serials 2 (pin 17,16) and 3 (pin 15,14)
 #define BAUDRATE_PH_SENSOR 9600 // Serial3
 #define BAUDRATE_EC_SENSOR 9600 // Serial2
-#define DHTRx 8
-#define tempWaterRx 9
-#define relay1Pin 2
-#define relay2Pin 3
-#define pump1Pin1 4 // pump pH increase
-#define pump1Pin2 5 // pump pH increase
-#define pump2Pin1 6 // pump pH decrease
-#define pump2Pin2 7 // pump pH decrease
+#define DHTRx 32
+#define tempWaterRx 41
+#define relay1Pin 47
+#define relay2Pin 51
+#define pump1Pin1 3 // pump pH increase
+#define pump1Pin2 4 // pump pH increase
+#define pump2Pin1 5 // pump pH decrease
+#define pump2Pin2 6 // pump pH decrease
+#define pump3Pin1 9 // pump EC increase
+#define pump3Pin2 10 // pump EC increase
+#define pump4Pin1 11 // pump EC decrease
+#define pump4Pin2 12 // pump EC decrease
 
 int freeRam () {
   extern int __heap_start, *__brkval; 
@@ -185,7 +189,8 @@ public:
 	//constructor sets pin, on which the pump is located
 	Pump(int pin, int pin2 = -1) : pin(pin), pin2(pin2)
 	{
-		pinMode(pin, OUTPUT);                    //set pump pins as output to be able to write to it
+		//set pump pins as output to be able to write to it
+		pinMode(pin, OUTPUT);
 		digitalWrite(pin, LOW);
 		if (pin2 != -1)
 		{
@@ -221,7 +226,7 @@ public:
 	//let the pump run for "runtime" milliseconds and then stop
 	void start(int runtime = -1)                              
 	{
-		if (state != 0)                      //dont start pump when it is already running or in pause state
+		if (state != 0) //dont start pump when it is already running or in pause state
 		{
 			//Serial.println("Pump is already running or on pause.");
 			return;
@@ -303,6 +308,9 @@ private:
 
 Pump pumpPhIncr(pump1Pin1, pump1Pin2);
 Pump pumpPhDecr(pump2Pin1, pump2Pin2);
+Pump pumpEcIncr(pump3Pin1, pump3Pin2);
+Pump pumpEcDecr(pump4Pin1, pump4Pin2);
+
 DHT dht(DHTRx, DHT22);
 TempWaterSensor tempWaterSensor(tempWaterRx);
 
@@ -377,6 +385,42 @@ void executeCommand(int receiver, char* command)
 			}
 		}
 		break;
+		case 7: // pump
+		{
+			char* com = strtok(command, ","); // read command
+			char* arg = strtok(NULL, " "); // read argument
+			int comNum = atoi(com);
+			int millisec = atoi(arg);
+			if (comNum == 0)
+				pumpEcIncr.stop();
+			else if (comNum == 1) // put pump on
+			{
+				if(millisec) {
+					pumpEcIncr.start(millisec);
+				}
+				else
+					pumpEcIncr.start();
+			}
+		}
+		break;
+		case 8: // pump
+		{
+			char* com = strtok(command, ","); // read command
+			char* arg = strtok(NULL, " "); // read argument
+			int comNum = atoi(com);
+			int millisec = atoi(arg);
+			if (comNum == 0)
+				pumpEcDecr.stop();
+			else if (comNum == 1) // put pump on
+			{
+				if(millisec) {
+					pumpEcDecr.start(millisec);
+				}
+				else
+					pumpEcDecr.start();
+			}
+		}
+		break;
 		case 5: // relay1
 		{
 			char* com = strtok(command, ","); // read command
@@ -419,7 +463,7 @@ void setup()
 	digitalWrite(relay2Pin, HIGH);
 }
 
-void loop()     	                                  //here we go...
+void loop()
 {
 	timeLast = timeCur;
 	timeCur = millis();
@@ -428,7 +472,7 @@ void loop()     	                                  //here we go...
 	// read Client inputs
 	if (readline(Serial.read(), serial1ReadBuffer, 80, serialReadPos) > 0)
 	{
-		char* receiver = strtok(serial1ReadBuffer, " ");               //let's pars the array at each comma
+		char* receiver = strtok(serial1ReadBuffer, " "); // parse the array at each comma
 		char* command = strtok(NULL, " ");
 		executeCommand(atoi(receiver), command);
 	}
@@ -438,6 +482,8 @@ void loop()     	                                  //here we go...
 
 	pumpPhIncr.check();
 	pumpPhDecr.check();
+	pumpEcIncr.check();
+	pumpEcDecr.check();
 
 	checkDht();
 	tempWaterSensor.check();
