@@ -41,15 +41,27 @@ function userClickedButton(button, isOn)
 		break;
 		case "socket1-button":
 			if (isOn)
+			{
+				relays[0].isActive = true;
 				sendCommand("5", "1");
+			}
 			else
-				sendCommand("5", "0");				
+			{
+				sendCommand("5", "0");
+				relays[0].isActive = false;
+			}				
 		break;
 		case "socket2-button":
 			if (isOn)
+			{
+				relays[1].isActive = true;
 				sendCommand("6", "1");
+			}
 			else
-				sendCommand("6", "0");	
+			{
+				relays[1].isActive = false;
+				sendCommand("6", "0");
+			}
 		break;
 		default:
 			console.log("Button " + button + " does not exist.");
@@ -105,8 +117,11 @@ function measurementChanged(measurement, value)
 			// deactivate relay
 			else
 			{
-				sendCommand("" + r + 5, "0");
-				relays[currentRelay].isActive = false;
+				if (relays[r].isActive)
+				{
+					sendCommand("" + r + 5, "0");
+					relays[currentRelay].isActive = false;
+				}
 			}
 		}
 	}
