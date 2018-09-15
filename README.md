@@ -38,6 +38,16 @@ And then use authbind --deep pm2 instead of pm2
 
 ### Additional information
 
+* How to enable WiFi on raspberry via SD card
+source: https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md
+
+sudo nano /etc/wpa_supplicant/wpa_supplicant.conf
+add:
+network={
+    ssid="testing"
+    psk="testingPassword"
+}
+
 * How to get out of kiosk mode
 ctrl + W <OR> alt + F4	//closes kiosk
 ctrl + alt + T	//opens terminal

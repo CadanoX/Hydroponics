@@ -24,14 +24,18 @@
 #define tempWaterRx 41
 #define relay1Pin 47
 #define relay2Pin 51
+#define motor1EnA 2
 #define pump1Pin1 3 // pump pH increase
 #define pump1Pin2 4 // pump pH increase
 #define pump2Pin1 5 // pump pH decrease
 #define pump2Pin2 6 // pump pH decrease
+#define motor1EnB 7
+#define motor2EnA 8
 #define pump3Pin1 9 // pump EC increase
 #define pump3Pin2 10 // pump EC increase
 #define pump4Pin1 11 // pump EC decrease
 #define pump4Pin2 12 // pump EC decrease
+#define motor2EnB 13
 
 int freeRam () {
   extern int __heap_start, *__brkval; 
@@ -284,7 +288,8 @@ public:
 
 	void check()
 	{
-		if ((timeLast + timeDelay - timeCur) < 0) // if more time than timeDelay was spent
+		// if more time than timeDelay was spent
+		if ((timeLast + timeDelay - timeCur) < 0)
 		{
 			timeLast = timeCur;
 			sensor->requestTemperatures();
@@ -456,6 +461,15 @@ void setup()
 	humidity = dht.readHumidity();
 	tempAir = dht.readTemperature();
 
+	pinMode(motor1EnA, OUTPUT);
+	pinMode(motor1EnB, OUTPUT);
+	pinMode(motor2EnA, OUTPUT);
+	pinMode(motor2EnB, OUTPUT);
+	analogWrite(motor1EnA, 200);
+	analogWrite(motor1EnB, 200);
+	analogWrite(motor2EnA, 200);
+	analogWrite(motor2EnB, 200);
+
 	// start with sockets turned off
 	pinMode(relay1Pin, OUTPUT);
 	pinMode(relay2Pin, OUTPUT);
@@ -474,7 +488,10 @@ void loop()
 	{
 		char* receiver = strtok(serial1ReadBuffer, " "); // parse the array at each comma
 		char* command = strtok(NULL, " ");
-		executeCommand(atoi(receiver), command);
+		if (strcmp(receiver, "debug") == 0)
+			Serial.println(command);
+		else
+			executeCommand(atoi(receiver), command);
 	}
 	
 	ecSensor.read();

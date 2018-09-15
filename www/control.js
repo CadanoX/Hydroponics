@@ -93,25 +93,24 @@ function measurementChanged(measurement, value)
 	{
 		if (relays[r].control == measurement)
 		{
-			if (relays[r].isActive)
-				return;
-
 			if (value < relays[r].scales[measurement][2]
 				|| value > relays[r].scales[measurement][3])
 			{
-				// activate relay
-				sendCommand("" + r + 4, "1");
-				relays[r].isActive = true;
-				// deactivate after 5 seconds
-				var currentRelay = r;
-				setTimeout( function() {
-					sendCommand("" + r + 4, "0");
-					relays[currentRelay].isActive = false;
-				}, 5000);
+				if (!relays[r].isActive)
+				{
+					sendCommand("" + r + 5, "1");
+					relays[r].isActive = true;
+				}
+			}
+			// deactivate relay
+			else
+			{
+				sendCommand("" + r + 5, "0");
+				relays[currentRelay].isActive = false;
 			}
 		}
 	}
-
+	/*
 	switch(measurement)
 	{
 		case "Temp":
@@ -148,4 +147,5 @@ function measurementChanged(measurement, value)
 			console.log("Measurement " + measurement + " does not exist.");
 		break;
 	}
+	*/
 }
