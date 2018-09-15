@@ -147,10 +147,10 @@ function writeToArduino(message)
 {
 	arduino.write(message, function(err)
 	{
-		if (err) {
-			return console.log('Error on write: ', err.message);
-		}
-		console.log('message sent: ', message);
+		if (err)
+			console.log('Error on write: ', err.message);
+		else
+			console.log('message sent: ', message);
 	});
 }
 
@@ -243,7 +243,8 @@ IO.sockets.on('connection', function (socket)
 		if (readMeasurementsOnly)
 			return;
 			
-		let commandString = command.receiver + " " + command.name;
+		let commandString = command.receiver + " " + command.name + "\r";
+		//let commandString = "debug " + command.receiver + "," + command.name + "\r";
 		if (commandString == "")
 			console.log("Command is empty");
 		if (commandString.length > 30) // because our Arduino script currently has an array for 30 bytes
