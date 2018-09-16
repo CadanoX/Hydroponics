@@ -83,25 +83,13 @@ var values = {
 var relays = [
 	{
 		"type": "none",
-		"control": "Time",
+		"control": "Manual",
 		"scales": {},
 		"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 	},
 	{
 		"type": "none",
-		"control": "Time",
-		"scales": {},
-		"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-	},
-	{
-		"type": "none",
-		"control": "Time",
-		"scales": {},
-		"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-	},
-	{
-		"type": "none",
-		"control": "Time",
+		"control": "Manual",
 		"scales": {},
 		"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 	}
@@ -117,13 +105,39 @@ function relayOptionChanged(relay, option)
 	relays[relay].control = option.value;
 	const relayOptionDiv = document.querySelector("#device-" + relay + " .option");
 
-	if (option.value == "Time")
+	if (option.value == "Manual")
 	{
+		relayOptionDiv.querySelector(".manualSwitch").style.display = "block";
+		relayOptionDiv.querySelector(".timeButtonContainer").style.display = "none";
+		relayOptionDiv.querySelector(".optionSlider").style.display = "none";
+		const slider = relayOptionDiv.querySelector(".manualSlider");
+		slider.style.display = "block";
+
+		if (slider.noUiSlider.get() == "0")
+		{
+			sendCommand("" + (parseInt(relay) + 5), "0");
+			relays[relay].isActive = false;
+		}
+		else
+		{
+			sendCommand("" + (parseInt(relay) + 5), "1");
+			relays[relay].isActive = true;
+		}
+
+
+	}
+	else if (option.value == "Time")
+	{
+		relayOptionDiv.querySelector(".manualSwitch").style.display = "none";
 		relayOptionDiv.querySelector(".timeButtonContainer").style.display = "block";
 		relayOptionDiv.querySelector(".optionSlider").style.display = "none";
+
+		// test if the relay should be on, based on the time configuration
+		clockSignalFullHour(new Date().getHours());
 	}
 	else
 	{
+		relayOptionDiv.querySelector(".manualSwitch").style.display = "none";
 		relayOptionDiv.querySelector(".timeButtonContainer").style.display = "none";
 		const slider = relayOptionDiv.querySelector(".optionSlider");
 		slider.style.display = "block";
@@ -160,6 +174,11 @@ function toggleRelayTimer(button)
 {
 	button.classList.toggle("mdc-button--raised");
 	relays[button.device].times[button.time] = button.classList.contains("mdc-button--raised");
+
+	// test if the new configuration should toggle the relay
+	let currentHour = (new Date()).getHours();
+	if (button.time == currentHour)
+		clockSignalFullHour(currentHour);
 }
 
 //TODO: move clock signals to server !! or they will be triggered by each client
@@ -379,7 +398,8 @@ document.addEventListener("DOMContentLoaded", function(event)
 		col2.innerHTML =`
 			<div class="mdc-select mdc-select--box">
 				<select class="mdc-select__native-control" onchange="relayOptionChanged(${r}, this)">
-					<option value="Time" selected>Time</option>
+					<option value="Manual" selected>Manual</option>
+					<option value="Time">Time</option>
 					<option value="Temp">Air temp</option>
 					<option value="WaterTemp">Water temp</option>
 					<option value="Humidity">Humidity</option>
@@ -397,10 +417,46 @@ document.addEventListener("DOMContentLoaded", function(event)
 		`;
 		col3.classList += "option";
 
+		// create toggle for manually controlling devices
+		const manualSwitch = document.createElement("div");
+		manualSwitch.classList.add("manualSwitch");
+		manualSwitch.style.display = "block";
+		col3.appendChild(manualSwitch);
+
+		const manualSlider = document.createElement("div");
+		manualSlider.classList.add("manualSlider");
+		manualSwitch.appendChild(manualSlider);
+
+		noUiSlider.create(manualSlider, {
+			start: 0,
+			range: {
+				'min': [0, 1],
+				'max': 1
+			},
+			connect: [true, true],
+			format: wNumb({
+				decimals: 0
+			})
+		});
+
+		manualSlider.noUiSlider.device = r;
+		manualSlider.noUiSlider.on('change', function (values, handle) {
+			if (values[handle] === '1') {
+				manualSlider.classList.add('off');
+				sendCommand("" + (parseInt(this.device) + 5), "1");
+				relays[this.device].isActive = true;
+			} else {
+				manualSlider.classList.remove('off');
+				sendCommand("" + (parseInt(this.device) + 5), "0");
+				relays[this.device].isActive = false;
+			}
+		});
+
 		// create buttons for controlling the time dependency
 		const timeButtonContainer = document.createElement("div");
 		timeButtonContainer.classList.add("timeButtonContainer");
 		col3.appendChild(timeButtonContainer);
+		timeButtonContainer.style.display = "none";
 		const timeButtonContainerMorning = document.createElement("div");
 		timeButtonContainer.appendChild(timeButtonContainerMorning);
 		const timeButtonContainerEvening = document.createElement("div");

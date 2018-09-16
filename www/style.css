@@ -54,6 +54,15 @@ body {
 	width: 75vw;
 }
 
+.manualSwitch {
+	padding: 0px 20px 0px 20px;
+}
+.manualSlider {
+	width : 50px;
+}
+.manualSlider .noUi-connect:nth-child(1) { background-color: #00B264; }
+.manualSlider .noUi-connect:nth-child(2) { background-color: #e6550d; }
+
 .timeButtonContainer {
 	background-color: var(--mdc-theme-background, #222);
 	margin: 10px;
