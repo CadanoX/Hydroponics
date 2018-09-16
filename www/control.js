@@ -110,7 +110,7 @@ function measurementChanged(measurement, value)
 			{
 				if (!relays[r].isActive)
 				{
-					sendCommand("" + r + 5, "1");
+					sendCommand("" + (parseInt(r) + 5), "1");
 					relays[r].isActive = true;
 				}
 			}
@@ -119,7 +119,7 @@ function measurementChanged(measurement, value)
 			{
 				if (relays[r].isActive)
 				{
-					sendCommand("" + r + 5, "0");
+					sendCommand("" + (parseInt(r) + 5), "0");
 					relays[r].isActive = false;
 				}
 			}
