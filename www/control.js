@@ -120,7 +120,7 @@ function measurementChanged(measurement, value)
 				if (relays[r].isActive)
 				{
 					sendCommand("" + r + 5, "0");
-					relays[currentRelay].isActive = false;
+					relays[r].isActive = false;
 				}
 			}
 		}
