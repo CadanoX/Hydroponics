@@ -43,24 +43,24 @@ function userClickedButton(button, isOn)
 		case "socket1-button":
 			if (isOn)
 			{
-				relays[0].isActive = true;
+				devices["relay"][0].isActive = true;
 				sendCommand("relay-0", "1");
 			}
 			else
 			{
 				sendCommand("relay-0", "0");
-				relays[0].isActive = false;
+				devices["relay"][1].isActive = false;
 			}				
 		break;
 		case "socket2-button":
 			if (isOn)
 			{
-				relays[1].isActive = true;
+				devices["relay"][1].isActive = true;
 				sendCommand("relay-1", "1");
 			}
 			else
 			{
-				relays[1].isActive = false;
+				devices["relay"][1].isActive = false;
 				sendCommand("relay-1", "0");
 			}
 		break;
@@ -102,30 +102,34 @@ function userChangedSlider(sliderName, value)
 
 function measurementChanged(measurement, value)
 {
-	for (r in relays)
+	for (type in devices)
 	{
-		if (relays[r].control == measurement)
+		for (nr in devices[type])
 		{
-			if (value < relays[r].scales[measurement][2]
-				|| value > relays[r].scales[measurement][3])
+			if (devices[type][nr].control == measurement)
 			{
-				if (!relays[r].isActive)
+				if (value < devices[type][nr].scales[measurement][2]
+					|| value > devices[type][nr].scales[measurement][3])
 				{
-					sendCommand("relay-" + r, "1");
-					relays[r].isActive = true;
+					if (!devices[type][nr].isActive)
+					{
+						sendCommand(type + '-' + nr, "1");
+						devices[type][nr].isActive = true;
+					}
 				}
-			}
-			// deactivate relay
-			else
-			{
-				if (relays[r].isActive)
+				// deactivate relay
+				else
 				{
-					sendCommand("relay-" + r, "0");
-					relays[r].isActive = false;
+					if (devices[type][nr].isActive)
+					{
+						sendCommand(type + '-' + nr, "0");
+						devices[type][nr].isActive = false;
+					}
 				}
 			}
 		}
 	}
+	
 	/*
 	switch(measurement)
 	{
