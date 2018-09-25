@@ -314,7 +314,7 @@ private:
 Pump pumpPhIncr(pump1Pin1, pump1Pin2);
 Pump pumpPhDecr(pump2Pin1, pump2Pin2);
 Pump pumpEcIncr(pump3Pin1, pump3Pin2);
-Pump pumpEcDecr(pump4Pin1, pump4Pin2);
+Pump pumpO2Incr(pump4Pin1, pump4Pin2);
 
 DHT dht(DHTRx, DHT22);
 TempWaterSensor tempWaterSensor(tempWaterRx);
@@ -337,117 +337,85 @@ void checkDht()
 	}
 }
 
-void executeCommand(int receiver, char* command)
+void executeCommand(char* deviceType, int deviceNr, char* command)
 {
-
-    Serial.print(receiver);
-	Serial.print(",");
-	Serial.println(command);
 	if (command == NULL)
 		return;
 	
-	switch(receiver)
+	if (strcmp(deviceType, "sensor") == 0)
 	{
-		case 1: // pH sensor
-			phSensor.write(command);
-		break;
-		case 2: // EC sensor
-			ecSensor.write(command);
-		break;
-		case 3: // pump
+		switch(deviceNr)
 		{
-			char* com = strtok(command, ","); // read command
-			char* arg = strtok(NULL, " "); // read argument
-			int comNum = atoi(com);
-			int millisec = atoi(arg);
-			if (comNum == 0)
-				pumpPhIncr.stop();
-			else if (comNum == 1) // put pump on
-			{
-				if(millisec) {
-					pumpPhIncr.start(millisec);
-				}
-				else
-					pumpPhIncr.start();
+			case 0: // pH sensor
+				phSensor.write(command);
+			break;
+			case 1: // EC sensor
+				ecSensor.write(command);
+			break;
+			default:
+				Serial.print("Sensor ");
+				Serial.print(deviceNr);
+				Serial.println(" is not defined.");
+			break;
+		}
+	}
+	else if (strcmp(deviceType, "pump") == 0)
+	{
+		char* com = strtok(command, ","); // read command
+		char* arg = strtok(NULL, " "); // read argument
+		int comNum = atoi(com);
+		int millisec = atoi(arg);
+
+		Pump* pump;
+		if (deviceNr == 0) pump = &pumpPhIncr;
+		else if (deviceNr == 1) pump = &pumpPhDecr;
+		else if (deviceNr == 2) pump = &pumpEcIncr;
+		else if (deviceNr == 3) pump = &pumpO2Incr;
+		else {
+			Serial.print("Pump ");
+			Serial.print(deviceNr);
+			Serial.println(" is not defined.");
+			return;
+		}
+
+		if (comNum == 0)
+			pump->stop();
+		else if (comNum == 1) // put pump on
+		{
+			if(millisec) {
+				pump->start(millisec);
+			}
+			else
+				pump->start();
+		}
+	}
+	else if (strcmp(deviceType, "relay") == 0)
+	{
+		char* com = strtok(command, ","); // read command
+		int comNum = atoi(com);
+
+		if (comNum == 0)
+		{
+			if (deviceNr == 0) digitalWrite(relay1Pin, HIGH);
+			else if (deviceNr == 1) digitalWrite(relay2Pin, HIGH);
+			else {
+				Serial.print("Relay ");
+				Serial.print(deviceNr);
+				Serial.println(" is not defined.");
+				return;
 			}
 		}
-		break;
-		case 4: // pump
+		else if (comNum == 1)
 		{
-			char* com = strtok(command, ","); // read command
-			char* arg = strtok(NULL, " "); // read argument
-			int comNum = atoi(com);
-			int millisec = atoi(arg);
-			if (comNum == 0)
-				pumpPhDecr.stop();
-			else if (comNum == 1) // put pump on
-			{
-				if(millisec) {
-					pumpPhDecr.start(millisec);
-				}
-				else
-					pumpPhDecr.start();
+			if (deviceNr == 0) digitalWrite(relay1Pin, LOW);
+			else if (deviceNr == 1) digitalWrite(relay2Pin, LOW);
+			else  {
+				Serial.print("Relay ");
+				Serial.print(deviceNr);
+				Serial.println(" is not defined.");
+				return;
 			}
 		}
-		break;
-		case 7: // pump
-		{
-			char* com = strtok(command, ","); // read command
-			char* arg = strtok(NULL, " "); // read argument
-			int comNum = atoi(com);
-			int millisec = atoi(arg);
-			if (comNum == 0)
-				pumpEcIncr.stop();
-			else if (comNum == 1) // put pump on
-			{
-				if(millisec) {
-					pumpEcIncr.start(millisec);
-				}
-				else
-					pumpEcIncr.start();
-			}
-		}
-		break;
-		case 8: // pump
-		{
-			char* com = strtok(command, ","); // read command
-			char* arg = strtok(NULL, " "); // read argument
-			int comNum = atoi(com);
-			int millisec = atoi(arg);
-			if (comNum == 0)
-				pumpEcDecr.stop();
-			else if (comNum == 1) // put pump on
-			{
-				if(millisec) {
-					pumpEcDecr.start(millisec);
-				}
-				else
-					pumpEcDecr.start();
-			}
-		}
-		break;
-		case 5: // relay1
-		{
-			char* com = strtok(command, ","); // read command
-			int comNum = atoi(com);
-			if (comNum == 0) // turn relay off
-				digitalWrite(relay1Pin, HIGH);
-			else if (comNum == 1) // turn relay on
-				digitalWrite(relay1Pin, LOW);
-		}
-		break;
-		case 6: // relay2
-		{
-			char* com = strtok(command, ","); // read command
-			int comNum = atoi(com);
-			if (comNum == 0) // turn relay off
-				digitalWrite(relay2Pin, HIGH);
-			else if (comNum == 1) // turn relay on
-				digitalWrite(relay2Pin, LOW);
-		}
-		break;
-		default:
-		break;
 	}
 }
 
@@ -486,12 +454,14 @@ void loop()
 	// read Client inputs
 	if (readline(Serial.read(), serial1ReadBuffer, 80, serialReadPos) > 0)
 	{
-		char* receiver = strtok(serial1ReadBuffer, " "); // parse the array at each comma
+		// parse the string in the buffer to the command parts (receiver-nr command)
+		char* deviceType = strtok(serial1ReadBuffer, "-");
+		char* deviceNr = strtok(NULL, " ");
 		char* command = strtok(NULL, " ");
-		if (strcmp(receiver, "debug") == 0)
+		if (strcmp(deviceType, "debug") == 0)
 			Serial.println(command);
 		else
-			executeCommand(atoi(receiver), command);
+			executeCommand(deviceType, atoi(deviceNr), command);
 	}
 	
 	ecSensor.read();
@@ -500,7 +470,7 @@ void loop()
 	pumpPhIncr.check();
 	pumpPhDecr.check();
 	pumpEcIncr.check();
-	pumpEcDecr.check();
+	pumpO2Incr.check();
 
 	checkDht();
 	tempWaterSensor.check();

@@ -92,6 +92,25 @@ var relays = [
 		"control": "Manual",
 		"scales": {},
 		"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+	},
+	{
+		"type": "none",
+		"control": "Manual",
+		"scales": {},
+		"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+	},
+	{
+		"type": "none",
+		"control": "Manual",
+		"scales": {},
+		"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+	}
+];
+
+var pumps = [
+	{
+		"control": "Manual",
+		"scales": {}
 	}
 ];
 
@@ -115,12 +134,12 @@ function relayOptionChanged(relay, option)
 
 		if (slider.noUiSlider.get() == "0")
 		{
-			sendCommand("" + (parseInt(relay) + 5), "0");
+			sendCommand("relay-" + relay, "0");
 			relays[relay].isActive = false;
 		}
 		else
 		{
-			sendCommand("" + (parseInt(relay) + 5), "1");
+			sendCommand("relay-" + relay, "1");
 			relays[relay].isActive = true;
 		}
 
@@ -189,19 +208,9 @@ function clockSignalFullHour(hour)
 		if (relays[i].control == "Time")
 		{
 			if (relays[i].times[hour])
-			{
-				if (i == 0)
-					sendCommand('5', '1'); // set relay 1 to on
-				else if (i == 1)
-					sendCommand('6', '1'); // set relay 1 to on
-			}
+				sendCommand('relay-' + i, '1'); // set relay i to on
 			else
-			{
-				if (i == 0)
-					sendCommand('5', '0'); // set relay 1 to off
-				else if (i == 1)
-					sendCommand('6', '0'); // set relay 1 to off
-			}
+				sendCommand('relay-' + i, '0'); // set relay i to off
 		}
 	}
 }
@@ -443,11 +452,11 @@ document.addEventListener("DOMContentLoaded", function(event)
 		manualSlider.noUiSlider.on('change', function (values, handle) {
 			if (values[handle] === '1') {
 				manualSlider.classList.add('off');
-				sendCommand("" + (parseInt(this.device) + 5), "1");
+				sendCommand("relay-" + this.device, "1");
 				relays[this.device].isActive = true;
 			} else {
 				manualSlider.classList.remove('off');
-				sendCommand("" + (parseInt(this.device) + 5), "0");
+				sendCommand("relay-" + this.device, "0");
 				relays[this.device].isActive = false;
 			}
 		});

@@ -1,25 +1,26 @@
-/* Commands are described by a receiver (pump or sensor) and the command to send
- * receivers are listed by number:
- * 1 = pH
- * 2 = EC
- * 3 = pump 1
- * 4 = pump 2
- * 5 = socket 1
- * 6 = socket 2
+/* Commands are described by a receiver (sensor, pump or relay) and the command to send
+ * receivers are enumerated:
+ * sensor-0 = pH
+ * sensor-1 = EC
+ * pump-0
+ * pump-1
+ * relay-0
+ * relay-1
  *
  * sensors have predefined commands, described in their documentation, e.g.:
  * C,1 = read the sensors value every second
  * Cal,mid,7.00 = calibrate the sensor's mid pH value to 7.00
  *
  * for pumps we use self-defined commandos:
+ * 1 = on
  * 1,1000 = on for 1000 ms
  * 0 = off
  *
  * A command to put the pump on for 5 seconds would look like:
- * 3 1,5000
+ * pump-0 1,5000
  *
  * A command to set the EC sensors name would look like:
- * 2 Name,Thomas
+ * sensor-1 Name,Thomas
  */
  
 function userClickedButton(button, isOn)
@@ -29,25 +30,25 @@ function userClickedButton(button, isOn)
 	{
 		case "pump1-button":
 			if (isOn)
-				sendCommand("3", "1");
+				sendCommand("pump-0", "1");
 			else
-				sendCommand("3", "0");
+				sendCommand("pump-0", "0");
 		break;
 		case "pump2-button":
 			if (isOn)
-				sendCommand("4", "1");
+				sendCommand("pump-1", "1");
 			else
-				sendCommand("4", "0");
+				sendCommand("pump-1", "0");
 		break;
 		case "socket1-button":
 			if (isOn)
 			{
 				relays[0].isActive = true;
-				sendCommand("5", "1");
+				sendCommand("relay-0", "1");
 			}
 			else
 			{
-				sendCommand("5", "0");
+				sendCommand("relay-0", "0");
 				relays[0].isActive = false;
 			}				
 		break;
@@ -55,12 +56,12 @@ function userClickedButton(button, isOn)
 			if (isOn)
 			{
 				relays[1].isActive = true;
-				sendCommand("6", "1");
+				sendCommand("relay-1", "1");
 			}
 			else
 			{
 				relays[1].isActive = false;
-				sendCommand("6", "0");
+				sendCommand("relay-1", "0");
 			}
 		break;
 		default:
@@ -110,7 +111,7 @@ function measurementChanged(measurement, value)
 			{
 				if (!relays[r].isActive)
 				{
-					sendCommand("" + (parseInt(r) + 5), "1");
+					sendCommand("relay-" + r, "1");
 					relays[r].isActive = true;
 				}
 			}
@@ -119,7 +120,7 @@ function measurementChanged(measurement, value)
 			{
 				if (relays[r].isActive)
 				{
-					sendCommand("" + (parseInt(r) + 5), "0");
+					sendCommand("relay-" + r, "0");
 					relays[r].isActive = false;
 				}
 			}
