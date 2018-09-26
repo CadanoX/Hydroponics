@@ -24,6 +24,8 @@
 #define tempWaterRx 41
 #define relay1Pin 47
 #define relay2Pin 51
+#define relay3Pin 46
+#define relay4Pin 50
 #define motor1EnA 2
 #define pump1Pin1 3 // pump pH increase
 #define pump1Pin2 4 // pump pH increase
@@ -398,6 +400,8 @@ void executeCommand(char* deviceType, int deviceNr, char* command)
 		{
 			if (deviceNr == 0) digitalWrite(relay1Pin, HIGH);
 			else if (deviceNr == 1) digitalWrite(relay2Pin, HIGH);
+			else if (deviceNr == 2) digitalWrite(relay3Pin, HIGH);
+			else if (deviceNr == 3) digitalWrite(relay4Pin, HIGH);
 			else {
 				Serial.print("Relay ");
 				Serial.print(deviceNr);
@@ -409,6 +413,8 @@ void executeCommand(char* deviceType, int deviceNr, char* command)
 		{
 			if (deviceNr == 0) digitalWrite(relay1Pin, LOW);
 			else if (deviceNr == 1) digitalWrite(relay2Pin, LOW);
+			else if (deviceNr == 2) digitalWrite(relay3Pin, LOW);
+			else if (deviceNr == 3) digitalWrite(relay4Pin, LOW);
 			else  {
 				Serial.print("Relay ");
 				Serial.print(deviceNr);
@@ -441,8 +447,12 @@ void setup()
 	// start with sockets turned off
 	pinMode(relay1Pin, OUTPUT);
 	pinMode(relay2Pin, OUTPUT);
+	pinMode(relay3Pin, OUTPUT);
+	pinMode(relay4Pin, OUTPUT);
 	digitalWrite(relay1Pin, HIGH);
 	digitalWrite(relay2Pin, HIGH);
+	digitalWrite(relay3Pin, HIGH);
+	digitalWrite(relay4Pin, HIGH);
 }
 
 void loop()
