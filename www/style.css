@@ -18,6 +18,13 @@
 
 body {
 	background-color: #111;
+	/* deactivate text select (taken from https://stackoverflow.com/questions/826782/how-to-disable-text-selection-highlighting#4407335) */
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
 }
 
 .mdc-toolbar {
@@ -63,6 +70,10 @@ body {
 .manualSlider .noUi-connect:nth-child(1) { background-color: #00B264; }
 .manualSlider .noUi-connect:nth-child(2) { background-color: #e6550d; }
 
+.optionDirSelection {
+	display: none;
+}
+
 .timeButtonContainer {
 	background-color: var(--mdc-theme-background, #222);
 	margin: 10px;
@@ -74,10 +85,13 @@ body {
 
 .optionSlider .noUi-connect:nth-child(1) { background-color: #e6550d; }
 .optionSlider .noUi-connect:nth-child(2) { background-color: #fdae6b; }
-/*.optionSlider .noUi-connect:nth-child(3) { background-color: #fee6ce; }*/
 .optionSlider .noUi-connect:nth-child(3) { background-color: #00B264; }
 .optionSlider .noUi-connect:nth-child(4) { background-color: #fdae6b; }
 .optionSlider .noUi-connect:nth-child(5) { background-color: #e6550d; }
+
+.optionSlider.plus .noUi-connect:nth-child(1) { background-color: #00B264; }
+.optionSlider.plus .noUi-connect:nth-child(2) { background-color: #fdae6b; }
+.optionSlider.plus .noUi-connect:nth-child(3) { background-color: #e6550d; }
 
 /*.time-button {
 	background-color: var(--mdc-theme-background, #222) !important;

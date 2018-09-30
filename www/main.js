@@ -86,21 +86,25 @@ var devices = {
 	[
 		{
 			"control": "Manual",
+			"controlDir": "+/-",
 			"scales": {},
 			"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 		},
 		{
 			"control": "Manual",
+			"controlDir": "+/-",
 			"scales": {},
 			"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 		},
 		{
 			"control": "Manual",
+			"controlDir": "+/-",
 			"scales": {},
 			"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 		},
 		{
 			"control": "Manual",
+			"controlDir": "+/-",
 			"scales": {},
 			"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 		}
@@ -109,18 +113,22 @@ var devices = {
 	[
 		{
 			"control": "Manual",
+			"controlDir": "-",
 			"scales": {}
 		},
 		{
 			"control": "Manual",
+			"controlDir": "+",
 			"scales": {}
 		},
 		{
 			"control": "Manual",
+			"controlDir": "-",
 			"scales": {}
 		},
 		{
 			"control": "Manual",
+			"controlDir": "-",
 			"scales": {}
 		}
 	]
@@ -136,7 +144,7 @@ function deviceOptionChanged(type, nr, option)
 	device.control = option.value;
 	const deviceOptionDiv = document.querySelector("#" + type + "-" + nr + " .option");
 
-	if (option.value == "Manual")
+	if (device.control == "Manual")
 	{
 		deviceOptionDiv.querySelector(".manualSwitch").style.display = "block";
 		deviceOptionDiv.querySelector(".timeButtonContainer").style.display = "none";
@@ -155,7 +163,7 @@ function deviceOptionChanged(type, nr, option)
 			device.isActive = true;
 		}
 	}
-	else if (option.value == "Time")
+	else if (device.control == "Time")
 	{
 		deviceOptionDiv.querySelector(".manualSwitch").style.display = "none";
 		deviceOptionDiv.querySelector(".timeButtonContainer").style.display = "block";
@@ -164,28 +172,133 @@ function deviceOptionChanged(type, nr, option)
 		// test if the relay should be on, based on the time configuration
 		clockSignalFullHour(new Date().getHours());
 	}
-	else
+	else // control by measurement
 	{
 		deviceOptionDiv.querySelector(".manualSwitch").style.display = "none";
 		deviceOptionDiv.querySelector(".timeButtonContainer").style.display = "none";
+		const deviceOptionDir = document.querySelector("#" + type + "-" + nr + " .optionDirSelection");
+		deviceOptionDir.style.display = "inline";
 		const slider = deviceOptionDiv.querySelector(".optionSlider");
 		slider.style.display = "block";
-		// if device does not have its own scale defined, copy scale from default to specific device
-		if (!device.scales[option.value])
-			device.scales[option.value] = values[option.value].scale.slice(0);
-		const scale = device.scales[option.value];
-		const handles = scale.slice(1, scale.length-1);
 
-		// adjust the slider to the given scale
-		slider.noUiSlider.updateOptions({
-			start: handles,
-			connect: (new Array(handles.length+1)).fill(true),
-			range: {
-				'min': scale[0],
-				'max': scale[scale.length-1]
-			}
-		}, true);
+		// if device does not have its own scale defined, copy scale from default to specific device
+		if (!device.scales[device.control])
+			device.scales[device.control] = values[device.control].scale.slice(0);
+		
+		// get and set the controlDir in the GUI
+		let lastControlDir = deviceOptionDir.querySelector('select').value;
+		deviceOptionDir.querySelector('select').value = device.controlDir;
+
+		const scale = device.scales[device.control];
+		let handles;
+		let numHandles = scale.length-2;
+		let numHandlesPlus = Math.floor(numHandles/2);
+		if (device.controlDir == "+") {
+			handles = scale.slice(scale.length-1-numHandlesPlus, scale.length-1);
+			slider.classList.add("plus");
+		}
+		else if (device.controlDir == "-") {
+			handles = scale.slice(1, scale.length-1-numHandlesPlus);
+			slider.classList.remove("plus");
+		}
+		else {
+			handles = scale.slice(1, scale.length-1);
+			slider.classList.remove("plus");
+		}
+
+		if (device.controlDir == lastControlDir)
+			updateDeviceOptionSlider(slider, handles);
+		else
+		{
+			slider.noUiSlider.destroy();
+			createSlider(slider, type, nr, handles);
+		}
 	}
+}
+
+function createSlider(div, type, nr, handles = [10,30,50,80])
+{
+	let device = devices[type][nr];
+	const scale = device.scales[device.control];
+
+	if (!scale)
+		range = [0,100];
+	else
+		range = [scale[0], scale[scale.length-1]];
+
+	noUiSlider.create(div, {
+		start: handles,
+		connect: (new Array(handles.length+1)).fill(true),
+		tooltips: (new Array(handles.length)).fill(true),
+		range: {
+			'min': range[0],
+			'max': range[1]
+		},
+		pips: {
+			mode: 'count',
+			values: 5,
+			density: 2.5
+		}
+	});
+	div.noUiSlider.device = {"type": type, "nr": nr};
+	div.noUiSlider.on('change', function()
+	{
+		const option = devices[this.device.type][this.device.nr].control;
+		// replace the inner values of the devices scale by the new scale
+		let arr = devices[this.device.type][this.device.nr].scales[option];
+		Array.prototype.splice.apply(arr, [1, this.get().length].concat(this.get()));
+		// convert the array to an array of numbers
+		for (var i = 0; i < arr.length; i++) 
+			arr[i] = +arr[i];
+		// copy the new array to the default values, so that they are used as the new default
+		values[option].scale = arr.slice(0);
+		// set the value scale of the according measurement card
+		cards[option].setValueScale(arr);
+	});
+}
+
+function updateDeviceOptionSlider(slider, handles)
+{
+	let device = devices[slider.noUiSlider.device.type][slider.noUiSlider.device.nr];
+	const scale = device.scales[device.control];
+
+	// adjust the slider to the given scale
+	slider.noUiSlider.updateOptions({
+		start: handles,
+		connect: (new Array(handles.length+1)).fill(true),
+		range: {
+			'min': scale[0],
+			'max': scale[scale.length-1]
+		}
+	}, true);
+}
+
+function deviceOptionDirChanged(type, nr, option)
+{
+	let device = devices[type][nr];
+	device.controlDir = option.value;
+	const deviceOptionDiv = document.querySelector("#" + type + "-" + nr + " .option");
+	const slider = deviceOptionDiv.querySelector(".optionSlider");
+	const scale = device.scales[device.control];
+
+	let handles;
+	let numHandles = scale.length-2;
+	let numHandlesPlus = Math.floor(numHandles/2);
+	if (device.controlDir == "+") {
+		handles = scale.slice(scale.length-1-numHandlesPlus, scale.length-1);
+		slider.classList.add("plus");
+	}
+	else if (device.controlDir == "-") {
+		handles = scale.slice(1, scale.length-1-numHandlesPlus);
+		slider.classList.remove("plus");
+	}
+	else {
+		handles = scale.slice(1, scale.length-1);
+		slider.classList.remove("plus");
+	}
+
+	slider.noUiSlider.destroy();
+	createSlider(slider, type, nr, handles);
 }
 
 function toggleRelayTimer(button)
@@ -204,16 +317,16 @@ function clockSignalFullHour(hour)
 {
 	for (var type in devices)
 	{
-		for (var nr in devices[type])
+		devices[type].forEach( (device, i) =>
 		{
-			if (devices[type][nr].control == "Time")
+			if (device.control == "Time")
 			{
-				if (devices[type][nr].times[hour])
+				if (device.times[hour])
 					sendCommand(type + '-' + nr, '1'); // set relay i to on
 				else
 					sendCommand(type + '-' + nr, '0'); // set relay i to off
 			}
-		}
+		});
 	}
 }
 
@@ -395,7 +508,7 @@ document.addEventListener("DOMContentLoaded", function(event)
 	const controls = document.querySelector("#controlOptions table");
 	for (var type in devices)
 	{
-		for (var nr in devices[type])
+		devices[type].forEach( (device, nr) =>
 		{
 			const row = document.createElement("tr");
 			row.id = type + "-" + nr;
@@ -425,13 +538,13 @@ document.addEventListener("DOMContentLoaded", function(event)
 						<option value="PH">PH</option>
 						<option value="Light">Light</option>
 						<option value="SAL">SAL</option>
-						`;
+				`;
 			else if (type == 'pump')
 				selectString += `
 						<option value="PH">PH</option>
 						<option value="EC">EC</option>
 						<option value="O2">O2</option>
-						`;
+				`;
 
 			selectString += `
 						<label class="mdc-floating-label mdc-floating-label--float-above">Choose an option</label>
@@ -439,6 +552,21 @@ document.addEventListener("DOMContentLoaded", function(event)
 					</select>
 				</div>
 			`;
+
+			// define +/- direction of control
+			selectString += `
+				<div class="mdc-select mdc-select--box optionDirSelection">
+					<select class="mdc-select__native-control" onchange="deviceOptionDirChanged('${type}', '${nr}', this)">
+						<option value="+/-" selected>+/-</option>
+						<option value="+">+</option>
+						<option value="-">-</option>
+						
+						<label class="mdc-floating-label mdc-floating-label--float-above">Choose direction</label>
+						<div class="mdc-line-ripple"></div>
+					</select>
+				</div>
+			`;
+
 			col2.innerHTML = selectString;
 			col3.classList += "option";
 
@@ -505,36 +633,8 @@ document.addEventListener("DOMContentLoaded", function(event)
 			col3.appendChild(slider);
 			slider.classList.add("optionSlider");
 			slider.style.display = "none";
-			noUiSlider.create(slider, {
-				start: [10, 30, 50, 80],
-				connect: [true, true, true, true, true],
-				tooltips: [ true, true, true, true ],	
-				range: {
-					'min': 0,
-					'max': 100
-				},
-				pips: {
-					mode: 'count',
-					values: 5,
-					density: 2.5
-				}
-			});
-			slider.noUiSlider.device = {"type": type, "nr": nr};
-			slider.noUiSlider.on('change', function()
-			{
-				const option = devices[this.device.type][this.device.nr].control;
-				// replace the inner values of the devices scale by the new scale
-				let arr = devices[this.device.type][this.device.nr].scales[option];
-				Array.prototype.splice.apply(arr, [1, this.get().length].concat(this.get()));
-				// convert the array to an array of numbers
-				for (var i = 0; i < arr.length; i++) 
-					arr[i] = +arr[i];
-				// copy the new array to the default values, so that they are used as the new default
-				values[option].scale = arr.slice(0);
-				// set the value scale of the according measurement card
-				cards[option].setValueScale(arr);
-			});
-		}
+			createSlider(slider, type, nr)
+		});
 	}
 
 	/*

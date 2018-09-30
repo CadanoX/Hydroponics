@@ -104,30 +104,62 @@ function measurementChanged(measurement, value)
 {
 	for (type in devices)
 	{
-		for (nr in devices[type])
+		devices[type].forEach( (device, nr) =>
 		{
-			if (devices[type][nr].control == measurement)
+			if (device.control == measurement)
 			{
-				if (value < devices[type][nr].scales[measurement][2]
-					|| value > devices[type][nr].scales[measurement][3])
+				if (type == "relay")
 				{
-					if (!devices[type][nr].isActive)
+					if (value < device.scales[measurement][2]
+						|| value > device.scales[measurement][3])
+					{ // activate relay
+						if (!device.isActive) {
+							sendCommand(type + '-' + nr, "1");
+							device.isActive = true;
+						}
+					}
+					else // deactivate relay
 					{
-						sendCommand(type + '-' + nr, "1");
-						devices[type][nr].isActive = true;
+						if (device.isActive) {
+							sendCommand(type + '-' + nr, "0");
+							device.isActive = false;
+						}
 					}
 				}
-				// deactivate relay
-				else
+				else // pump				
 				{
-					if (devices[type][nr].isActive)
-					{
-						sendCommand(type + '-' + nr, "0");
-						devices[type][nr].isActive = false;
-					}
+					if (device.isActive)
+						return;
+
+					// IMPORTANT: Currently scale might not be ordered, so don't do ( val > measure 2 && val < measure 3)
+					// check upper scale
+					if (device.controlDir == "+/-" || device.controlDir == "+")
+						if (value < device.scales[measurement][3])
+							return;
+
+					// check lower scale
+					if (device.controlDir == "+/-" || device.controlDir == "-")
+						if (value > device.scales[measurement][2])
+							return;
+
+					//activate pump
+					sendCommand(type + '-' + nr, "1");
+					device.isActive = true;
+				
+					let duration; // time the pump will stay active
+					if (value < device.scales[measurement][1] || value > device.scales[measurement][4])
+						duration = 2000;
+					else if (value < device.scales[measurement][2] || value > device.scales[measurement][3])
+						duration = 1000;
+					
+					// deactivate pump after "duration" seconds
+					setTimeout((type, nr) => { sendCommand(type + '-' + nr, "0"); }, duration, type, nr);
+					// pause the pump for 2 minutes
+					let pause = 2 * 60000;
+					setTimeout((device) => { device.isActive = false; }, pause, device);
 				}
 			}
-		}
+		});
 	}
 	
 	/*
