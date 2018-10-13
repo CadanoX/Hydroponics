@@ -291,9 +291,9 @@ public:
 	void check()
 	{
 		// if more time than timeDelay was spent
-		if ((timeLast + timeDelay - timeCur) < 0)
+		if ((this.timeLast + this.timeDelay - timeCur) < 0)
 		{
-			timeLast = timeCur;
+			this.timeLast = timeCur;
 			sensor->requestTemperatures();
 			temperature = sensor->getTempCByIndex(0);
 			/*

@@ -155,7 +155,7 @@ function measurementChanged(measurement, value)
 					// deactivate pump after "duration" seconds
 					setTimeout((type, nr) => { sendCommand(type + '-' + nr, "0"); }, duration, type, nr);
 					// pause the pump for 2 minutes
-					let pause = 2 * 60000;
+					let pause = 0.5 * 60000;
 					setTimeout((device) => { device.isActive = false; }, pause, device);
 				}
 			}

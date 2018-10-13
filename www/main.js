@@ -149,6 +149,8 @@ function deviceOptionChanged(type, nr, option)
 		deviceOptionDiv.querySelector(".manualSwitch").style.display = "block";
 		deviceOptionDiv.querySelector(".timeButtonContainer").style.display = "none";
 		deviceOptionDiv.querySelector(".optionSlider").style.display = "none";
+		document.querySelector("#" + type + "-" + nr + " .optionDirSelection").style.display = "none";
+
 		const slider = deviceOptionDiv.querySelector(".manualSlider");
 		slider.style.display = "block";
 
@@ -168,6 +170,7 @@ function deviceOptionChanged(type, nr, option)
 		deviceOptionDiv.querySelector(".manualSwitch").style.display = "none";
 		deviceOptionDiv.querySelector(".timeButtonContainer").style.display = "block";
 		deviceOptionDiv.querySelector(".optionSlider").style.display = "none";
+		document.querySelector("#" + type + "-" + nr + " .optionDirSelection").style.display = "none";
 
 		// test if the relay should be on, based on the time configuration
 		clockSignalFullHour(new Date().getHours());
@@ -245,8 +248,15 @@ function createSlider(div, type, nr, handles = [10,30,50,80])
 	{
 		const option = devices[this.device.type][this.device.nr].control;
 		// replace the inner values of the devices scale by the new scale
-		let arr = devices[this.device.type][this.device.nr].scales[option];
-		Array.prototype.splice.apply(arr, [1, this.get().length].concat(this.get()));
+		let arr = devices[this.device.type][this.device.nr].scales[option].slice();
+
+		if (this.device.controlDir == "+")
+			Array.prototype.splice.apply(arr, [3, 4].concat(this.get()));
+		else if (this.device.controlDir == "-")
+			Array.prototype.splice.apply(arr, [1, 2].concat(this.get()));
+		else
+			Array.prototype.splice.apply(arr, [1, 4].concat(this.get()));
+
 		// convert the array to an array of numbers
 		for (var i = 0; i < arr.length; i++) 
 			arr[i] = +arr[i];
@@ -317,7 +327,7 @@ function clockSignalFullHour(hour)
 {
 	for (var type in devices)
 	{
-		devices[type].forEach( (device, i) =>
+		devices[type].forEach( (device, nr) =>
 		{
 			if (device.control == "Time")
 			{
