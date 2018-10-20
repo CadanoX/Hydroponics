@@ -246,13 +246,14 @@ function createSlider(div, type, nr, handles = [10,30,50,80])
 	div.noUiSlider.device = {"type": type, "nr": nr};
 	div.noUiSlider.on('change', function()
 	{
-		const option = devices[this.device.type][this.device.nr].control;
 		// replace the inner values of the devices scale by the new scale
-		let arr = devices[this.device.type][this.device.nr].scales[option].slice();
+		
+		const device = devices[this.device.type][this.device.nr];
+		let arr = device.scales[device.control];
 
-		if (this.device.controlDir == "+")
-			Array.prototype.splice.apply(arr, [3, 4].concat(this.get()));
-		else if (this.device.controlDir == "-")
+		if (device.controlDir == "+")
+			Array.prototype.splice.apply(arr, [3, 2].concat(this.get()));
+		else if (device.controlDir == "-")
 			Array.prototype.splice.apply(arr, [1, 2].concat(this.get()));
 		else
 			Array.prototype.splice.apply(arr, [1, 4].concat(this.get()));
@@ -261,9 +262,9 @@ function createSlider(div, type, nr, handles = [10,30,50,80])
 		for (var i = 0; i < arr.length; i++) 
 			arr[i] = +arr[i];
 		// copy the new array to the default values, so that they are used as the new default
-		values[option].scale = arr.slice(0);
+		values[device.control].scale = arr.slice(0);
 		// set the value scale of the according measurement card
-		cards[option].setValueScale(arr);
+		cards[device.control].setValueScale(arr);
 	});
 }
 
