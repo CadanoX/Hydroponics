@@ -17,6 +17,16 @@ sudo apt-get install -y nodejs
 node -v
 npm install --save express serialport socket.io socket.io-client material-components-web mongodb
 
+* For USB support do
+Linux:
+sudo apt-get install build-essential libudev-dev
+
+Windows:
+install http://zadig.akeo.ie/ USB drivers
+
+then on both:
+npm install usb
+
 * Update all node.js modules
 npm update
 

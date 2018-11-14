@@ -23,6 +23,7 @@
  * sensor-1 Name,Thomas
  */
  
+ var time = 0;
 function userClickedButton(button, isOn)
 {
 	//console.log("User clicked button " + button);
@@ -131,7 +132,9 @@ function measurementChanged(measurement, value)
 					if (device.isActive)
 						return;
 
-					// IMPORTANT: Currently scale might not be ordered, so don't do ( val > measure 2 && val < measure 3)
+					// IMPORTANT: Currently scale might not be ordered,
+					//so don't check if the value is in the middle range ( val > measure 2 && val < measure 3),
+					// but check for + and - scales individually, if the value is inside their red ranges
 					// check upper scale
 					if (device.controlDir == "+/-" || device.controlDir == "+")
 						if (value < device.scales[measurement][3])
@@ -141,6 +144,10 @@ function measurementChanged(measurement, value)
 					if (device.controlDir == "+/-" || device.controlDir == "-")
 						if (value > device.scales[measurement][2])
 							return;
+
+					let curTime = Date.now();
+					console.log(curTime - time);
+					time = curTime;
 
 					//activate pump
 					sendCommand(type + '-' + nr, "1");
@@ -156,7 +163,10 @@ function measurementChanged(measurement, value)
 					setTimeout((type, nr) => { sendCommand(type + '-' + nr, "0"); }, duration, type, nr);
 					// pause the pump for 2 minutes
 					let pause = 0.5 * 60000;
-					setTimeout((device) => { device.isActive = false; }, pause, device);
+
+					setTimeout((device) => {
+						device.isActive = false;
+					}, pause, device);
 				}
 			}
 		});

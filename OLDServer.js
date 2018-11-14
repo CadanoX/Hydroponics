@@ -11,7 +11,15 @@ const IO = require('socket.io')(server)
 const mongod = require('mongod');
 const MongoClient = require('mongodb').MongoClient;
 var DB = { initialized: false };
+
 const fs = require('fs');
+const usb = require('usb');
+var removablesConnected = 0;
+var mountInterval;
+var mountTimer;
+const drivelist = require('drivelist');
+var storagePath;
+var dataFilename;
 
 /*/
 import {config} from './config';
@@ -29,6 +37,77 @@ const IO = io(server);
 const MongoClient = mongodb.MongoClient;
 var DB = { initialized: false };
 //*/
+
+// check for USB devices
+usb.on('attach', function(device) {
+	// try to establish the new device as storage, until it is mounted
+	mountInterval = setInterval(() => {	changeStorageDevice(); }, 500);
+	// if the device didn't mount within 10 seconds, stop trying
+	mountTimer = setTimeout(() => clearInterval(mountInterval), 10000);
+});
+
+usb.on('detach', function(device) {
+	// when USB is disconnected before being mounted, stop trying to use it as storage
+	if (removablesConnected <= 0)
+		clearInterval(mountInterval);
+
+	// go back to HDD (or a previous USB) as storage device
+	changeStorageDevice();
+});
+
+function directoryExists(filePath) {
+	try { return fs.statSync(filePath).isDirectory(); }
+	catch (err) { return false; }
+}
+
+function changeStorageDevice()
+{
+	drivelist.list((error, drives) =>
+	{
+		if (error)
+			throw error;
+
+		let hdds = [];
+		let removables = [];
+
+		let i = 0;
+		drives.forEach(function(drive)
+		{
+			console.log(drive);
+			if (drive.isRemovable) {
+				removables.push(drive);
+			}
+			else
+				hdds.push(drive);
+		});
+
+		removablesConnected = removables.length;
+
+		let oldStoragePath = storagePath;
+		
+		if (removables.length > 0)
+			storagePath = removables[removables.length - 1].mountpoints[0].path + 'OLD-data';
+		else
+			storagePath = hdds[0].mountpoints[0].path + 'OLD-data';
+
+		if (oldStoragePath != storagePath)
+		{
+			console.log("new storage path: " + storagePath)
+			console.log(directoryExists(storagePath));
+
+			// if the data folder does not exist on the device, create it
+			if (!directoryExists(storagePath))
+				fs.mkdirSync(storagePath);
+
+			changeDataFile();
+
+			// communicate, that the new device was properly mounted and selected as storage
+			// ISSUE: If a second device is added, before the first one is mounted,
+			// then the first one will be used as storage, although the second was connected later
+			clearInterval(mountInterval);
+		}
+	});
+}
 
 // arduino communication
 const mockArduino = config.arduino.mockingEnabled; // emulate an arduino, in case you got no arduino connected
@@ -93,28 +172,15 @@ function restoreMeasurements(measure)
 	}
 }
 
-const dataDir = './data';
-var dataFile;
-changeDataFile();
+changeStorageDevice();
 function changeDataFile()
 {
-	dataFile = 'data' + new Date().getTime();
+	dataFilename = 'data' + new Date().getTime() + '.csv';
 }
-function directoryExists(filePath)
-{
-    try {
-        return fs.statSync(filePath).isDirectory();
-    } catch (err) {
-        return false;
-    }
-}
-
-if (!directoryExists(dataDir))
-    fs.mkdirSync(dataDir);
 
 function storeMeasurementsInFile(measures)
 {
-    const logFilePath = dataDir + '/' + dataFile + '.csv';
+    const logFilePath = storagePath + '/' + dataFilename;
     const timestamp = new Date().toLocaleString();
 	for (var m in measures)
 	{
@@ -122,7 +188,7 @@ function storeMeasurementsInFile(measures)
 		fs.appendFile(logFilePath, data, (error) =>
 		{
 			if (error) {
-				console.error(`Write error to ${dataFile}: ${error.message}`);
+				console.error(`Write error to ${dataFilename}: ${error.message}`);
 			}
 		});
 	}
