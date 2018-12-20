@@ -21,6 +21,7 @@ var mountTimer;
 const drivelist = require('drivelist');
 
 var storage = new Storage();
+var storageDevices = [];
 
 /*/
 import {config} from './config';
@@ -41,60 +42,69 @@ var DB = { initialized: false };
 
 // check for USB devices
 usb.on('attach', function(device) {
+	//console.log(device);
+	// TODO: use interval per device connected based on device ID
 	// try multiple times to establish the new device as storage, until it is mounted
-	mountInterval = setInterval(() => {	changeStorageDevice(); }, 500);
+	mountInterval = setInterval(() => {	updateStorageDevices(); }, 500);
 	// if the device didn't mount within 10 seconds, stop trying
 	mountTimer = setTimeout(() => clearInterval(mountInterval), 10000);
 });
 
 usb.on('detach', function(device) {
-	// when USB is disconnected before being mounted, stop trying to use it as storage
-	if (removablesConnected <= 0)
-		clearInterval(mountInterval);
-
-	// go back to HDD (or a previous USB) as storage device
-	changeStorageDevice();
+	//console.log(device);
+	updateStorageDevices();
 });
 
-function changeStorageDevice()
+function onDeviceMounted(drive)
+{
+	//console.log("mounted");
+	//console.log(drive);
+	clearInterval(mountInterval);
+	
+	storage.config(drive.mountpoints[0].path);
+	if (drive.isRemovable)
+		storage.copy(drive.mountpoints[0].path + "/OLD-data");
+	//TODO: copy all data from device to USB
+}
+function onDeviceUnmounted(drive)
+{
+	//console.log("unmounted");
+	//console.log(drive);
+	clearInterval(mountInterval);
+}
+
+function updateStorageDevices()
 {
 	drivelist.list((error, drives) =>
 	{
 		if (error)
 			throw error;
 
-		let hdds = [];
-		let removables = [];
-
-		let i = 0;
-		drives.forEach(function(drive)
+		// check if devices changed
+		let driveWasMounted = new Array(drives.length).fill(false);
+		let checked = new Array(storageDevices.length).fill(false);
+		for (var i = 0; i < drives.length; i++)
 		{
-			//console.log(drive);
-			if (drive.isRemovable) {
-				removables.push(drive);
+			for (var j = 0; j < storageDevices.length; j++)
+			{
+				if (drives[i].description === storageDevices[j].description)
+				{
+					driveWasMounted[i] = true;
+					checked[j] = true;
+					break;
+				}
 			}
-			else
-				hdds.push(drive);
-		});
-
-		removablesConnected = removables.length;
-
-		let oldStoragePath = storage.path();
-
-		if (removables.length > 0)
-			storage.path(removables[removables.length - 1].mountpoints[0].path);
-		else
-			storage.path(hdds[0].mountpoints[0].path);
-
-		if (oldStoragePath != storage.path())
-		{
-			// communicate, that the new device was properly mounted and selected as storage
-			// ISSUE: If a second device is added, before the first one is mounted,
-			// then the first one will be used as storage, although the second was connected later
-			clearInterval(mountInterval);
-
-			//TODO: copy all data from device to USB
 		}
+
+		for (var i = 0; i < driveWasMounted.length; i++)
+			if (driveWasMounted[i] === false)
+				onDeviceMounted(drives[i]);
+
+		for (var i = 0; i < checked.length; i++)
+			if (checked[i] === false)
+				onDeviceUnmounted(storageDevices[i]);
+
+		storageDevices = drives;
 	});
 }
 
@@ -161,7 +171,7 @@ function restoreMeasurements(measure)
 	}
 }
 
-changeStorageDevice();
+updateStorageDevices();
 
 
 /* CREATE WEB SERVER */

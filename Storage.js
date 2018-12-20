@@ -7,10 +7,12 @@ const fs = require('fs');
     }
 
 	class Storage {
-		constructor(path = ".", options = {}) {
-			this._path = path;
+		constructor(path = "./OLD-data", options = {}) {
+			this._path;
+            this._filename;
+            this.path(path);
+
             this._data = [];
-            this._filename = "";
 
             this._options = {
                 interval: 10000,
@@ -27,6 +29,53 @@ const fs = require('fs');
         options(d) { return d == null ? this._options : (this._setOptions(d), this); }
         path(d) { return d == null ? this._path : (this._setPath(d), this); }
 
+        // read config.json from path and apply its options
+        config(path)
+        {
+            // if there exists a config.json file in the path, apply it
+            fs.readFile(path + "/config.json", (error, data) =>
+            {
+                if (error)
+                {
+                    if (error.code === 'EACCES')
+                        console.log(`No permission to read ${path}/config.json`);
+                    else if (error.code !== 'ENOENT')
+                        throw error;
+                }
+                else
+                {
+                    let options = null;
+                    try { options = JSON.parse(data); }
+                    catch(e) { console.log(e); }
+                    
+                    if (options)
+                        this.options(options);
+                }
+            });
+        }
+
+        copy(path)
+        {
+            fs.readdir(this._path, (err, files) => {
+                if (err)
+                    console.error(`Read storage: ${err}`);
+                else
+                    files.forEach(file =>
+                    {
+                        let source = this._path + '/' + file;
+                        fs.copyFile(source, path + '/' + file, (err) => {
+                            if (err)
+                                console.error(`Write USB: ${err}`);
+                            else // successfully stored ==> delete from storage
+                                fs.unlink(source, (err) => {
+                                    if (err)
+                                        console.error(err)
+                                });
+                          });
+                    });
+            });
+        }
+
         _start()
         {
             clearInterval(this._storeInterval);
@@ -41,30 +90,9 @@ const fs = require('fs');
                 console.log("new storage path: " + path);
                 this._path = path;
 
-                // if there exists a config.json file in the new path, apply it
-                fs.readFile(path + "/config.json", (error, data) =>
-                {
-                    if (error)
-                    {
-                        if (error.code === 'EACCES')
-                            console.log(`No permission to read ${path}/config.json`);
-                        else if (error.code !== 'ENOENT')
-                            throw error;
-                    }
-                    else
-                    {
-                        let options = null;
-                        try { options = JSON.parse(data); }
-                        catch(e) { console.log(e); }
-                        
-                        if (options)
-                            this.options(options);
-                    }
-                });
-
                 // if the data folder does not exist on the device, create it
-                if (!directoryExists(path + '/OLD-data'))
-                    fs.mkdirSync(path + '/OLD-data');
+                if (!directoryExists(path))
+                    fs.mkdirSync(path);
 
                 // new filename to avoid name collisions
                 this._changeDataFile();
@@ -135,7 +163,7 @@ const fs = require('fs');
             if (numAggregations < 1)
                 return;
 
-            const filepath = this._path + '/OLD-data/' + this._filename;
+            const filepath = this._path + '/' + this._filename;
 
             let aggregatedData = [];
             let lastStoredIndex = -1;
