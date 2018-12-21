@@ -111,9 +111,20 @@ function measurementChanged(measurement, value)
 			{
 				if (type == "relay")
 				{
-					if (value < device.scales[measurement][2]
-						|| value > device.scales[measurement][3])
-					{ // activate relay
+					let activate = false;
+
+					if (device.controlDir == '+'
+						|| device.controlDir == '+/-')
+						if (value > device.scales[measurement][3])
+							activate = true;
+
+					if (device.controlDir == '-'
+						|| device.controlDir == '+/-')
+						if (value < device.scales[measurement][2])
+							activate = true;
+
+					if (activate)
+					{
 						if (!device.isActive) {
 							sendCommand(type + '-' + nr, "1");
 							device.isActive = true;
