@@ -56,6 +56,9 @@ const fs = require('fs');
 
         copy(path)
         {
+            if (!directoryExists(path))
+                fs.mkdirSync(path);
+
             fs.readdir(this._path, (err, files) => {
                 if (err)
                     console.error(`Read storage: ${err}`);
