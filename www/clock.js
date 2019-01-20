@@ -7,8 +7,8 @@ function initClock()
 		clock.innerHTML = date.toLocaleTimeString();
 		if (date.getMinutes() == 0)
 			clockSignalFullHour(date.getHours());
-		if ((date.getMinutes()%10) == 0)
-			clockSignalTenMinutes();
+		/*if ((date.getMinutes()%10) == 0)
+			clockSignalTenMinutes();*/
 	}
 
 	setInterval(function () {

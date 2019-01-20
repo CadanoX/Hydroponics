@@ -40,6 +40,242 @@ const MongoClient = mongodb.MongoClient;
 var DB = { initialized: false };
 //*/
 
+/* Commands are described by a receiver (sensor, pump or relay) and the command to send
+ * receivers are enumerated:
+ * sensor-0 = pH
+ * sensor-1 = EC
+ * pump-0
+ * pump-1
+ * relay-0
+ * relay-1
+ *
+ * sensors have predefined commands, described in their documentation, e.g.:
+ * C,1 = read the sensors value every second
+ * Cal,mid,7.00 = calibrate the sensor's mid pH value to 7.00
+ *
+ * for pumps we use self-defined commandos:
+ * 1 = on
+ * 1,1000 = on for 1000 ms
+ * 0 = off
+ *
+ * A command to put the pump on for 5 seconds would look like:
+ * pump-0 1,5000
+ *
+ * A command to set the EC sensors name would look like:
+ * sensor-1 Name,Thomas
+ */
+
+var time = 0;
+
+var deviceSettings = {
+	"relay":
+	[
+		{
+			"control": "Manual",
+			"controlDir": "+/-",
+			"isActive": false,
+			"manualSwitch": false,
+			"scales": {},
+			"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+		},
+		{
+			"control": "Manual",
+			"controlDir": "+/-",
+			"scales": {},
+			"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+		},
+		{
+			"control": "Manual",
+			"controlDir": "+/-",
+			"scales": {},
+			"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+		},
+		{
+			"control": "Manual",
+			"controlDir": "+/-",
+			"scales": {},
+			"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+		}
+	],
+	"pump":
+	[
+		{
+			"control": "Manual",
+			"controlDir": "-",
+			"scales": {}
+		},
+		{
+			"control": "Manual",
+			"controlDir": "+",
+			"scales": {}
+		},
+		{
+			"control": "Manual",
+			"controlDir": "-",
+			"scales": {}
+		},
+		{
+			"control": "Manual",
+			"controlDir": "-",
+			"scales": {}
+		}
+	]
+};
+
+function sendCommand(receiver, command)
+{
+	if (readMeasurementsOnly)
+		return;
+
+	let commandString = receiver + " " + command + "\r";
+	//let commandString = "debug " + command.receiver + "," + command.name + "\r";
+	if (commandString == "")
+		console.log("Command is empty");
+	if (commandString.length > 30) // because our Arduino script currently has an array for 30 bytes
+		console.log("TOO LONG / TOO MANY COMMANDS, WE LOST BYTES ON THE WAY !!!");
+
+	writeToArduino(commandString);
+}
+
+
+function applySettings(json)
+{
+	if (!json)
+		return;
+	
+	// copy new settings
+	for (type in json) {
+		if (!!deviceSettings[type]) {
+			json[type].forEach( (device, nr) =>	{
+				Object.assign(deviceSettings[type][nr], device);
+			});
+		}
+	}
+
+	// apply settings
+	for (type in deviceSettings)
+	{
+		deviceSettings[type].forEach( (device, nr) =>
+		{
+			if (device.control == "Manual")
+			{
+				if (device.manualSwitch) {
+					sendCommand(type + "-" + nr, "1");
+					device.isActive = true;
+				}
+				else {
+					sendCommand(type + "-" + nr, "0");
+					device.isActive = false;
+				}
+			}
+			else if (device.control == "Time")
+				// test if the relay should be on, based on the time configuration
+				clockSignalFullHour(new Date().getHours());
+		});
+	}
+}
+
+function measurementChanged(measurement, value)
+{
+	for (type in deviceSettings)
+	{
+		deviceSettings[type].forEach( (device, nr) =>
+		{
+			if (device.control == measurement)
+			{
+				if (type == "relay")
+				{
+					let activate = false;
+
+					if (device.controlDir == '+'
+						|| device.controlDir == '+/-')
+						if (value > device.scales[measurement][3])
+							activate = true;
+
+					if (device.controlDir == '-'
+						|| device.controlDir == '+/-')
+						if (value < device.scales[measurement][2])
+							activate = true;
+
+					if (activate)
+					{
+						if (!device.isActive) {
+							sendCommand(type + '-' + nr, "1");
+							device.isActive = true;
+						}
+					}
+					else // deactivate relay
+					{
+						if (device.isActive) {
+							sendCommand(type + '-' + nr, "0");
+							device.isActive = false;
+						}
+					}
+				}
+				else // pump				
+				{
+					if (device.isActive)
+						return;
+
+					// IMPORTANT: Currently scale might not be ordered,
+					//so don't check if the value is in the middle range ( val > measure 2 && val < measure 3),
+					// but check for + and - scales individually, if the value is inside their red ranges
+					// check upper scale
+					if (device.controlDir == "+/-" || device.controlDir == "+")
+						if (value < device.scales[measurement][3])
+							return;
+
+					// check lower scale
+					if (device.controlDir == "+/-" || device.controlDir == "-")
+						if (value > device.scales[measurement][2])
+							return;
+
+					let curTime = Date.now();
+					console.log(curTime - time);
+					time = curTime;
+
+					//activate pump
+					sendCommand(type + '-' + nr, "1");
+					device.isActive = true;
+				
+					let duration; // time the pump will stay active
+					if (value < device.scales[measurement][1] || value > device.scales[measurement][4])
+						duration = 2000;
+					else if (value < device.scales[measurement][2] || value > device.scales[measurement][3])
+						duration = 1000;
+					
+					// deactivate pump after "duration" seconds
+					setTimeout((type, nr) => { sendCommand(type + '-' + nr, "0"); }, duration, type, nr);
+					// pause the pump for 2 minutes
+					let pause = 0.5 * 60000;
+
+					setTimeout((device) => {
+						device.isActive = false;
+					}, pause, device);
+				}
+			}
+		});
+	}
+}
+
+//TODO: move clock signals to server !! or they will be triggered by each client
+function clockSignalFullHour(hour)
+{
+	for (var type in deviceSettings)
+	{
+		deviceSettings[type].forEach( (device, nr) =>
+		{
+			if (device.control == "Time")
+			{
+				if (device.times[hour])
+					sendCommand(type + '-' + nr, '1'); // set relay i to on
+				else
+					sendCommand(type + '-' + nr, '0'); // set relay i to off
+			}
+		});
+	}
+}
+
 // check for USB devices
 usb.on('attach', function(device) {
 	//console.log(device);
@@ -218,7 +454,9 @@ function onDataReceived(data)
 		}
 		if (measures)
 		{
-			IO.emit('new measurements', measures);
+			IO.emit("new measurements", measures);
+			for (var m in measures)
+				measurementChanged(m, measures[m])
 			storage.add(measures);
 		}
 	}
@@ -282,18 +520,14 @@ arduino.on('close', function()
 IO.sockets.on('connection', function (socket)
 {
 	console.log("Client connected");
-	socket.on('new command', function(command)
-	{
-		if (readMeasurementsOnly)
-			return;
-			
-		let commandString = command.receiver + " " + command.name + "\r";
-		//let commandString = "debug " + command.receiver + "," + command.name + "\r";
-		if (commandString == "")
-			console.log("Command is empty");
-		if (commandString.length > 30) // because our Arduino script currently has an array for 30 bytes
-			console.log("TOO LONG / TOO MANY COMMANDS, WE LOST BYTES ON THE WAY !!!");
-			
-		writeToArduino(commandString);
+	socket.emit("settingsApplied", deviceSettings); // send current settings to client
+
+	socket.on('settingsCancelled', function() {
+		socket.emit("settingsApplied", deviceSettings);
+	});
+	
+	socket.on('settingsChanged', function(json) {
+		applySettings(json);
+		socket.broadcast.emit('settingsApplied', deviceSettings); // send to all clients but sender
 	});
 });

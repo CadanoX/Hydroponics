@@ -28,7 +28,7 @@ body {
 }
 
 .mdc-toolbar {
-	color: #f2dd6a;
+	color: var(--mdc-theme-text-primary-on-primary, #f2dd6a);
 }
 
 #dyamic-nav-bar {
@@ -48,7 +48,7 @@ body {
 
 #controlOptions table {
 	/*border: 1px solid #222;*/
-	color: #e6c300;
+	color: var(--mdc-theme-text-primary-on-primary, #f2dd6a);
 	margin: 20px;
 }
 
@@ -61,6 +61,26 @@ body {
 	width: 75vw;
 }
 
+#controlOptions .control {
+	position: absolute;
+	right: 15px;
+	width: 170px;
+}
+
+#controlOptions .control .mdc-button {
+	background-color: var(--mdc-theme-background, #222);
+	color: var(--mdc-theme-text-primary-on-primary, #f2dd6a);
+}
+
+.noUi-handle {
+	background: var(--mdc-theme-primary, black);
+	border: var(--mdc-theme-background, #222);
+}
+
+select{
+	background: var(--mdc-theme-background, #222);
+	color: var(--mdc-theme-text-primary-on-primary, #f2dd6a);
+}
 .manualSwitch {
 	padding: 0px 20px 0px 20px;
 }
@@ -72,11 +92,6 @@ body {
 
 .optionDirSelection {
 	display: none;
-}
-
-.timeButtonContainer {
-	background-color: var(--mdc-theme-background, #222);
-	margin: 10px;
 }
 
 .optionSlider {
@@ -93,15 +108,14 @@ body {
 .optionSlider.plus .noUi-connect:nth-child(2) { background-color: #fdae6b; }
 .optionSlider.plus .noUi-connect:nth-child(3) { background-color: #e6550d; }
 
-/*.time-button {
-	background-color: var(--mdc-theme-background, #222) !important;
-	color: #f2dd6a !important;
+.timeButtonContainer {
+	background-color: var(--mdc-theme-background, #222);
+	margin: 10px;
 }
 
-.time-button .active {
-	background-color: #f2dd6a !important;
-	color: var(--mdc-theme-background, #222) !important;
-}*/
+.time-button:not(.mdc-button--raised) {
+	color:var(--mdc-theme-text-secondary-on-background, #b5a348) !important;
+}
 
 .mdc-grid-tile {
 	--mdc-grid-list-tile-width: 300px;

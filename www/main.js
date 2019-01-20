@@ -1,4 +1,19 @@
-var socket;
+socket = io();	
+socket.on('settingsApplied', (deviceSettings) => {
+	devices = deviceSettings;
+	initSettings();
+});
+socket.on('new measurements', onMeasuresReceived);
+function onMeasuresReceived(measures)
+{
+	for (var m in measures)
+	{
+		if (!!cards[m])
+		{
+			cards[m].setValue(measures[m]);
+		}
+	}
+}
 var buttonIsOn = [0, 0, 0, 0]; // keep track of the buttons for sockets and pumps
 var cards = {};
 
@@ -81,67 +96,27 @@ var values = {
 	}
 };
 
-var devices = {
-	"relay":
-	[
-		{
-			"control": "Manual",
-			"controlDir": "+/-",
-			"scales": {},
-			"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-		},
-		{
-			"control": "Manual",
-			"controlDir": "+/-",
-			"scales": {},
-			"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-		},
-		{
-			"control": "Manual",
-			"controlDir": "+/-",
-			"scales": {},
-			"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-		},
-		{
-			"control": "Manual",
-			"controlDir": "+/-",
-			"scales": {},
-			"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-		}
-	],
-	"pump":
-	[
-		{
-			"control": "Manual",
-			"controlDir": "-",
-			"scales": {}
-		},
-		{
-			"control": "Manual",
-			"controlDir": "+",
-			"scales": {}
-		},
-		{
-			"control": "Manual",
-			"controlDir": "-",
-			"scales": {}
-		},
-		{
-			"control": "Manual",
-			"controlDir": "-",
-			"scales": {}
-		}
-	]
-};
+// store control settings here before sending them to the server
+var devices;
 
 function isNumeric(n) {
     return !isNaN(parseFloat(n)) && isFinite(n);
 }
 
+function cancelOptions()
+{
+	socket.emit("settingsCancelled", devices);
+}
+
+function saveOptions()
+{
+	socket.emit("settingsChanged", devices);
+}
+
 function deviceOptionChanged(type, nr, option)
 {
 	let device = devices[type][nr];
-	device.control = option.value;
+	device.control = option;
 	const deviceOptionDiv = document.querySelector("#" + type + "-" + nr + " .option");
 
 	if (device.control == "Manual")
@@ -154,16 +129,7 @@ function deviceOptionChanged(type, nr, option)
 		const slider = deviceOptionDiv.querySelector(".manualSlider");
 		slider.style.display = "block";
 
-		if (slider.noUiSlider.get() == "0")
-		{
-			sendCommand(type + "-" + nr, "0");
-			device.isActive = false;
-		}
-		else
-		{
-			sendCommand(type + "-" + nr, "1");
-			device.isActive = true;
-		}
+		device.manualSwitch = slider.noUiSlider.get();
 	}
 	else if (device.control == "Time")
 	{
@@ -171,9 +137,6 @@ function deviceOptionChanged(type, nr, option)
 		deviceOptionDiv.querySelector(".timeButtonContainer").style.display = "block";
 		deviceOptionDiv.querySelector(".optionSlider").style.display = "none";
 		document.querySelector("#" + type + "-" + nr + " .optionDirSelection").style.display = "none";
-
-		// test if the relay should be on, based on the time configuration
-		clockSignalFullHour(new Date().getHours());
 	}
 	else // control by measurement
 	{
@@ -316,51 +279,6 @@ function toggleRelayTimer(button)
 {
 	button.classList.toggle("mdc-button--raised");
 	devices[button.device.type][button.device.nr].times[button.time] = button.classList.contains("mdc-button--raised");
-
-	// test if the new configuration should toggle the relay
-	let currentHour = (new Date()).getHours();
-	if (button.time == currentHour)
-		clockSignalFullHour(currentHour);
-}
-
-//TODO: move clock signals to server !! or they will be triggered by each client
-function clockSignalFullHour(hour)
-{
-	for (var type in devices)
-	{
-		devices[type].forEach( (device, nr) =>
-		{
-			if (device.control == "Time")
-			{
-				if (device.times[hour])
-					sendCommand(type + '-' + nr, '1'); // set relay i to on
-				else
-					sendCommand(type + '-' + nr, '0'); // set relay i to off
-			}
-		});
-	}
-}
-
-function clockSignalTenMinutes()
-{
-	socket.emit('clockTen');
-}
-
-//var commandQueue = [];
-function Command(receiver, name)
-{
-	this.receiver = receiver;
-	this.name = name;
-}
-
-function sendCommandToDevice(command)
-{
-	socket.emit('new command', command);
-}
-	
-function sendCommand(receiver, command)
-{
-	sendCommandToDevice( new Command(receiver, command) );
 }
 
 let workaroundSliderJustFired = false;
@@ -418,10 +336,150 @@ function buttonClicked(button)
 	}
 }
 
-document.addEventListener("DOMContentLoaded", function(event)
+function initSettings()
 {
-	socket = io();
-	
+	// set up controls
+	const controls = document.querySelector("#controlOptions table");
+	// delete old settings
+	controls.querySelectorAll("tr:not(.header)").forEach(d => d.remove())
+	// show current settings
+	for (var type in devices)
+	{
+		devices[type].forEach( (device, nr) =>
+		{
+			const row = document.createElement("tr");
+			row.id = type + "-" + nr;
+			const col1 = document.createElement("td");
+			const col2 = document.createElement("td");
+			const col3 = document.createElement("td");
+			controls.appendChild(row);
+			row.appendChild(col1);
+			row.appendChild(col2);
+			row.appendChild(col3);
+
+			col1.innerText = type + " " + nr;
+			
+			let selectString = `
+				<div class="mdc-select mdc-select--box">
+					<select class="mdc-select__native-control" onchange="deviceOptionChanged('${type}', '${nr}', this.value)">
+						<option value="Manual" selected>Manual</option>`;
+
+			if (type == "relay")
+				selectString += `
+						<option value="Time">Time</option>
+						<option value="Temp">Air temp</option>
+						<option value="WaterTemp">Water temp</option>
+						<option value="Humidity">Humidity</option>
+						<option value="CO2">CO2</option>
+						<option value="O2">O2</option>
+						<option value="EC">EC</option>
+						<option value="PH">PH</option>
+						<option value="Light">Light</option>
+						<option value="SAL">SAL</option>
+				`;
+			else if (type == 'pump')
+				selectString += `
+						<option value="PH">PH</option>
+						<option value="EC">EC</option>
+						<option value="O2">O2</option>
+				`;
+
+			selectString += `
+						<label class="mdc-floating-label mdc-floating-label--float-above">Choose an option</label>
+						<div class="mdc-line-ripple"></div>
+					</select>
+				</div>
+			`;
+
+			// define +/- direction of control
+			selectString += `
+				<div class="mdc-select mdc-select--box optionDirSelection">
+					<select class="mdc-select__native-control" onchange="deviceOptionDirChanged('${type}', '${nr}', this)">
+						<option value="+/-" selected>+/-</option>
+						<option value="+">+</option>
+						<option value="-">-</option>
+						
+						<label class="mdc-floating-label mdc-floating-label--float-above">Choose direction</label>
+						<div class="mdc-line-ripple"></div>
+					</select>
+				</div>
+			`;
+
+			col2.innerHTML = selectString;
+			col2.querySelector('select').value = device.control;
+			col2.querySelector('.optionDirSelection').value = device.controlDir;
+
+			col3.classList += "option";
+
+			// create toggle for manually controlling devices
+			const manualSwitch = document.createElement("div");
+			manualSwitch.classList.add("manualSwitch");
+			manualSwitch.style.display = "block";
+			col3.appendChild(manualSwitch);
+
+			const manualSlider = document.createElement("div");
+			manualSlider.classList.add("manualSlider");
+			manualSwitch.appendChild(manualSlider);
+
+			noUiSlider.create(manualSlider, {
+				start: 0,
+				range: {
+					'min': [0, 1],
+					'max': 1
+				},
+				connect: [true, true],
+				format: wNumb({
+					decimals: 0
+				})
+			});
+
+			manualSlider.noUiSlider.device = {"type": type, "nr": nr};
+			manualSlider.noUiSlider.on('change', function (values, handle) {
+				devices[this.device.type][this.device.nr].manualSwitch = values[handle];
+			});
+
+			manualSlider.noUiSlider.set(device.manualSwitch);
+
+			// create buttons for controlling the time dependency
+			const timeButtonContainer = document.createElement("div");
+			timeButtonContainer.classList.add("timeButtonContainer");
+			col3.appendChild(timeButtonContainer);
+			timeButtonContainer.style.display = "none";
+			const timeButtonContainerMorning = document.createElement("div");
+			timeButtonContainer.appendChild(timeButtonContainerMorning);
+			const timeButtonContainerEvening = document.createElement("div");
+			timeButtonContainer.appendChild(timeButtonContainerEvening);
+
+			for (var i = 0; i < 24; i++)
+			{
+				const timeButton = document.createElement("div");
+				timeButton.classList.add("mdc-button");
+				timeButton.classList.add("time-button");
+				timeButton.type = "button";
+				timeButton.time = i;
+				timeButton.device = {"type": type, "nr": nr};
+				timeButton.onclick = () => toggleRelayTimer(timeButton);
+				timeButton.innerHTML = ((i + 11) % 12 + 1) + ((i < 12) ? "am" : "pm");
+				(i < 12) ? timeButtonContainerMorning.appendChild(timeButton) : timeButtonContainerEvening.appendChild(timeButton);
+
+				if (!!device.times && device.times[i])
+					toggleRelayTimer(timeButton);
+			}
+
+			// create slider for controlling the dependency of measured values
+			const slider = document.createElement("div");
+			col3.appendChild(slider);
+			slider.classList.add("optionSlider");
+			slider.style.display = "none";
+			createSlider(slider, type, nr);
+
+			deviceOptionChanged(type, nr, device.control);
+		});
+	}
+}
+
+document.addEventListener("DOMContentLoaded", function(event)
+{	
 	let cardContainer = document.getElementById('mainCardContainer');
 	for (var v in values)
 	{
@@ -442,20 +500,7 @@ document.addEventListener("DOMContentLoaded", function(event)
 			workaroundSliderJustFired = true;
 		});
 	}
-	
-	socket.on('new measurements', onMeasuresReceived);
-	function onMeasuresReceived(measures)
-	{
-		for (var m in measures)
-		{
-			if (!!cards[m])
-			{
-				cards[m].setValue(measures[m]);
-				measurementChanged(m, measures[m])
-			}
-		}
-	}
-	
+
 	const MDCToolbar = mdc.toolbar.MDCToolbar;
 	const MDCToolbarFoundation = mdc.toolbar.MDCToolbarFoundation;
 	const toolbar = new MDCToolbar(document.querySelector('.mdc-toolbar'));
@@ -514,139 +559,6 @@ document.addEventListener("DOMContentLoaded", function(event)
 	document.querySelector('#menu-button').addEventListener('click', function (evt) {
 		menu.open = !menu.open;
 	});
-	
-	// set up controls
-	const controls = document.querySelector("#controlOptions table");
-	for (var type in devices)
-	{
-		devices[type].forEach( (device, nr) =>
-		{
-			const row = document.createElement("tr");
-			row.id = type + "-" + nr;
-			const col1 = document.createElement("td");
-			const col2 = document.createElement("td");
-			const col3 = document.createElement("td");
-			controls.appendChild(row);
-			row.appendChild(col1);
-			row.appendChild(col2);
-			row.appendChild(col3);
-
-			col1.innerText = type + " " + nr;
-			let selectString = `
-				<div class="mdc-select mdc-select--box">
-					<select class="mdc-select__native-control" onchange="deviceOptionChanged('${type}', '${nr}', this)">
-						<option value="Manual" selected>Manual</option>`;
-
-			if (type == "relay")
-				selectString += `
-						<option value="Time">Time</option>
-						<option value="Temp">Air temp</option>
-						<option value="WaterTemp">Water temp</option>
-						<option value="Humidity">Humidity</option>
-						<option value="CO2">CO2</option>
-						<option value="O2">O2</option>
-						<option value="EC">EC</option>
-						<option value="PH">PH</option>
-						<option value="Light">Light</option>
-						<option value="SAL">SAL</option>
-				`;
-			else if (type == 'pump')
-				selectString += `
-						<option value="PH">PH</option>
-						<option value="EC">EC</option>
-						<option value="O2">O2</option>
-				`;
-
-			selectString += `
-						<label class="mdc-floating-label mdc-floating-label--float-above">Choose an option</label>
-						<div class="mdc-line-ripple"></div>
-					</select>
-				</div>
-			`;
-
-			// define +/- direction of control
-			selectString += `
-				<div class="mdc-select mdc-select--box optionDirSelection">
-					<select class="mdc-select__native-control" onchange="deviceOptionDirChanged('${type}', '${nr}', this)">
-						<option value="+/-" selected>+/-</option>
-						<option value="+">+</option>
-						<option value="-">-</option>
-						
-						<label class="mdc-floating-label mdc-floating-label--float-above">Choose direction</label>
-						<div class="mdc-line-ripple"></div>
-					</select>
-				</div>
-			`;
-
-			col2.innerHTML = selectString;
-			col3.classList += "option";
-
-			// create toggle for manually controlling devices
-			const manualSwitch = document.createElement("div");
-			manualSwitch.classList.add("manualSwitch");
-			manualSwitch.style.display = "block";
-			col3.appendChild(manualSwitch);
-
-			const manualSlider = document.createElement("div");
-			manualSlider.classList.add("manualSlider");
-			manualSwitch.appendChild(manualSlider);
-
-			noUiSlider.create(manualSlider, {
-				start: 0,
-				range: {
-					'min': [0, 1],
-					'max': 1
-				},
-				connect: [true, true],
-				format: wNumb({
-					decimals: 0
-				})
-			});
-
-			manualSlider.noUiSlider.device = {"type": type, "nr": nr};
-			manualSlider.noUiSlider.on('change', function (values, handle) {
-				if (values[handle] === '1') {
-					manualSlider.classList.add('off');
-					sendCommand(this.device.type + "-" + this.device.nr, "1");
-					devices[this.device.type][this.device.nr].isActive = true;
-				} else {
-					manualSlider.classList.remove('off');
-					sendCommand(this.device.type + "-" + this.device.nr, "0");
-					devices[this.device.type][this.device.nr].isActive = false;
-				}
-			});
-
-			// create buttons for controlling the time dependency
-			const timeButtonContainer = document.createElement("div");
-			timeButtonContainer.classList.add("timeButtonContainer");
-			col3.appendChild(timeButtonContainer);
-			timeButtonContainer.style.display = "none";
-			const timeButtonContainerMorning = document.createElement("div");
-			timeButtonContainer.appendChild(timeButtonContainerMorning);
-			const timeButtonContainerEvening = document.createElement("div");
-			timeButtonContainer.appendChild(timeButtonContainerEvening);
-
-			for (var i = 0; i < 24; i++)
-			{
-				const timeButton = document.createElement("div");
-				timeButton.classList.add("mdc-button");
-				timeButton.classList.add("time-button");
-				timeButton.type = "button";
-				timeButton.time = i;
-				timeButton.device = {"type": type, "nr": nr};
-				timeButton.onclick = () => toggleRelayTimer(timeButton);
-				timeButton.innerHTML = ((i + 11) % 12 + 1) + ((i < 12) ? "am" : "pm");
-				(i < 12) ? timeButtonContainerMorning.appendChild(timeButton) : timeButtonContainerEvening.appendChild(timeButton);
-			}
-
-			// create slider for controlling the dependency of measured values
-			const slider = document.createElement("div");
-			col3.appendChild(slider);
-			slider.classList.add("optionSlider");
-			slider.style.display = "none";
-			createSlider(slider, type, nr)
-		});
-	}
 
 	/*
 	const MDCFormField = mdc.formField.MDCFormField;
@@ -664,5 +576,5 @@ document.addEventListener("DOMContentLoaded", function(event)
 	*/
 	
 	
-	initClock();	
+	initClock();
 });

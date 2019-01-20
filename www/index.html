@@ -18,7 +18,6 @@
 		<script src="wnumb-1.1.0/wNumb.js"></script>
 		<script src="clock.js"></script>
 		<script src="cards.js"></script>
-		<script src="control.js"></script>
 		<script src="main.js"></script>
 	</head>
 	<body>
@@ -87,8 +86,12 @@
 		<div class="panels">
 			<div id="mainCardContainer" class="panel active sensor-card-container" role="tabpanel" aria-hidden="false"></div>
 			<div id="controlOptions" class="panel" role="tabpanel" aria-hidden="true">
+				<div class="control">
+					<div type="button" class="mdc-button" onclick="cancelOptions()">Cancel</div>
+					<div type="button" class="mdc-button" onclick="saveOptions()">Save</div>
+				</div>
 				<table style="width:100%">
-					<tr>
+					<tr class="header">
 						<th>Device</th>
 						<th>is controlled by</th>
 						<th>option</th>

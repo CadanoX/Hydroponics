@@ -20,11 +20,10 @@ npm install --save express serialport socket.io socket.io-client material-compon
 * For USB support do
 Linux:
 sudo apt-get install build-essential libudev-dev
-
+npm install --unsafe-perm usb
+ 
 Windows:
 install http://zadig.akeo.ie/ USB drivers
-
-then on both:
 npm install usb
 
 * Update all node.js modules
