@@ -1,0 +1,180 @@
+{
+  "relay": [
+    {
+      "control": "Manual",
+      "controlDir": "+/-",
+      "isActive": false,
+      "manualSwitch": "0",
+      "scales": {},
+      "times": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "control": "Manual",
+      "controlDir": "+/-",
+      "scales": {},
+      "times": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "manualSwitch": "0"
+    },
+    {
+      "control": "Manual",
+      "controlDir": "+/-",
+      "scales": {},
+      "times": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "manualSwitch": "0",
+      "isActive": false
+    },
+    {
+      "control": "Manual",
+      "controlDir": "+/-",
+      "scales": {
+        "Temp": [
+          0,
+          33,
+          38,
+          47,
+          52,
+          80
+        ]
+      },
+      "times": [
+        true,
+        true,
+        true,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "manualSwitch": "0",
+      "isActive": true
+    }
+  ],
+  "pump": [
+    {
+      "control": "Manual",
+      "controlDir": "-",
+      "scales": {},
+      "manualSwitch": "0"
+    },
+    {
+      "control": "Manual",
+      "controlDir": "-",
+      "scales": {
+        "PH": [
+          0,
+          0.47,
+          1.04,
+          0.84,
+          1.94,
+          14
+        ]
+      },
+      "manualSwitch": "0",
+      "isActive": false
+    },
+    {
+      "control": "Manual",
+      "controlDir": "-",
+      "scales": {},
+      "manualSwitch": "0"
+    },
+    {
+      "control": "Manual",
+      "controlDir": "-",
+      "scales": {},
+      "manualSwitch": "0"
+    }
+  ]
+}

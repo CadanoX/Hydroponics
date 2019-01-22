@@ -19,6 +19,7 @@ var removablesConnected = 0;
 var mountInterval;
 var mountTimer;
 const drivelist = require('drivelist');
+const fs = require('fs');
 
 var storage = new Storage();
 var storageDevices = [];
@@ -67,60 +68,8 @@ var DB = { initialized: false };
 
 var time = 0;
 
-var deviceSettings = {
-	"relay":
-	[
-		{
-			"control": "Manual",
-			"controlDir": "+/-",
-			"isActive": false,
-			"manualSwitch": false,
-			"scales": {},
-			"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-		},
-		{
-			"control": "Manual",
-			"controlDir": "+/-",
-			"scales": {},
-			"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-		},
-		{
-			"control": "Manual",
-			"controlDir": "+/-",
-			"scales": {},
-			"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-		},
-		{
-			"control": "Manual",
-			"controlDir": "+/-",
-			"scales": {},
-			"times": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-		}
-	],
-	"pump":
-	[
-		{
-			"control": "Manual",
-			"controlDir": "-",
-			"scales": {}
-		},
-		{
-			"control": "Manual",
-			"controlDir": "+",
-			"scales": {}
-		},
-		{
-			"control": "Manual",
-			"controlDir": "-",
-			"scales": {}
-		},
-		{
-			"control": "Manual",
-			"controlDir": "-",
-			"scales": {}
-		}
-	]
-};
+var deviceSettingsFile = "settings.json";
+var deviceSettings;
 
 function sendCommand(receiver, command)
 {
@@ -152,6 +101,8 @@ function applySettings(json)
 		}
 	}
 
+	storeSettings();
+
 	// apply settings
 	for (type in deviceSettings)
 	{
@@ -159,13 +110,17 @@ function applySettings(json)
 		{
 			if (device.control == "Manual")
 			{
-				if (device.manualSwitch) {
-					sendCommand(type + "-" + nr, "1");
-					device.isActive = true;
+				if (device.manualSwitch == true) {
+					if (!device.isActive) {
+						sendCommand(type + "-" + nr, "1");
+						device.isActive = true;
+					}
 				}
 				else {
-					sendCommand(type + "-" + nr, "0");
-					device.isActive = false;
+					if (device.isActive) {
+						sendCommand(type + "-" + nr, "0");
+						device.isActive = false;
+					}
 				}
 			}
 			else if (device.control == "Time")
@@ -173,6 +128,33 @@ function applySettings(json)
 				clockSignalFullHour(new Date().getHours());
 		});
 	}
+}
+
+function storeSettings()
+{
+	fs.writeFile(deviceSettingsFile, JSON.stringify(deviceSettings, null, 2), 'utf8', (err) => {
+	if (err)
+		console.log("Error storing settings: " + err);
+	});
+}
+
+function loadSettings()
+{
+	fs.readFile(deviceSettingsFile, 'utf8', (err, data) => {
+		if (err)
+			console.log("Error loading settings: " + err);
+		else {
+			// decode the response
+			try {
+				deviceSettings = JSON.parse(data);
+			}
+			catch(e) {
+				// byte errors, that destroy the format
+				console.log(data);
+				console.log(e);
+			}
+		}
+	});
 }
 
 function measurementChanged(measurement, value)
@@ -408,6 +390,7 @@ function restoreMeasurements(measure)
 }
 
 updateStorageDevices();
+loadSettings();
 
 
 /* CREATE WEB SERVER */
@@ -523,11 +506,11 @@ IO.sockets.on('connection', function (socket)
 	socket.emit("settingsApplied", deviceSettings); // send current settings to client
 
 	socket.on('settingsCancelled', function() {
-		socket.emit("settingsApplied", deviceSettings);
+		socket.emit("settingsApplied", deviceSettings); // send current settings to client
 	});
-	
+
 	socket.on('settingsChanged', function(json) {
 		applySettings(json);
-		socket.broadcast.emit('settingsApplied', deviceSettings); // send to all clients but sender
+		socket.broadcast.emit('settingsApplied', deviceSettings); // send new settings to all clients but sender
 	});
 });
