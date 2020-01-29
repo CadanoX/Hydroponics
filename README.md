@@ -3,6 +3,7 @@
 Optimal Loop Direction was a project with the goal of developing a hydroponics system for private and industrial use. The project is discontinued and the source code is now openly available.
 
 ## Idea
+
 The core of the device is a Raspberry Pi running a Node.js server. The
 control interface is utilizing standard web technologies including HTML5,
 CSS3, and JavasSript (ES6). It features Google's material design and
@@ -16,6 +17,7 @@ should, e.g., pump fertilizer into the water, activate the heater, or
 water the plants.
 
 ## Features
+
 - Reading of sensor measurements
 - Definition of optimal, acceptable, and critical ranges for each individual measurement
 - Automatic adjustment of the environment to keep variables in their optimal range
@@ -29,32 +31,58 @@ water the plants.
 - Upload of settings via USB
 
 # Setup
-Setup node.js by executing the following commands:
+
+Install [node.js](https://nodejs.org/en/download/package-manager/).
+
+Or via the command line:
+
 ```sh
 curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 sudo apt-get install -y nodejs
-node -v
-npm install --save express serialport socket.io socket.io-client material-components-web mongodb
+npm install
+```
+
+For a first test run `node OLDServer.js` and open `localhost` in the browser.
+
+# Additional information
+
+How to enable WiFi on raspberry via SD card
+source: https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md
+
+```sh
+sudo nano /etc/wpa_supplicant/wpa_supplicant.conf
+```
+
+add:
+
+```
+network={
+    ssid="testing"
+    psk="testingPassword"
+}
 ```
 
 For USB support:
 
 - Linux:
+
 ```sh
 sudo apt-get install build-essential libudev-dev
 npm install --unsafe-perm usb
 ```
- 
+
 - Windows:
   - install http://zadig.akeo.ie/ USB drivers
   - `npm install usb`
 
 Update all node.js modules:
+
 ```sh
 npm update --unsafe-perm=true --allow-root
 ```
 
 Use PM2 to automatically run the application on startup:
+
 ```sh
 npm install pm2 -g
 pm2 startup systemd
@@ -64,6 +92,7 @@ pm2 save
 ```
 
 Run the service without sudo:
+
 ```sh
 sudo apt-get install authbind
 sudo touch /etc/authbind/byport/80
@@ -74,22 +103,8 @@ authbind --deep pm2 update
 
 And then use `authbind --deep pm2` instead of `pm2`
 
-# Additional information
-
-How to enable WiFi on raspberry via SD card
-source: https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md
-```sh
-sudo nano /etc/wpa_supplicant/wpa_supplicant.conf
-```
-add:
-```
-network={
-    ssid="testing"
-    psk="testingPassword"
-}
-```
-
 How to get out of kiosk mode:
+
 ```
 ctrl + W <OR> alt + F4	//closes kiosk
 ctrl + alt + T	//opens terminal
