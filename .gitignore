@@ -1,2 +1,5 @@
 node_modules/
 .vscode/
+OLD-data
+settings.json
+arduinoAllSensors.ino

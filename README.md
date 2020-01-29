@@ -1,67 +1,109 @@
-# README #
+# Hydroponics O.L.D.
 
-Optimal Loop Direction
+Optimal Loop Direction was a project with the goal of developing a hydroponics system for private and industrial use. The project is discontinued and the source code is now openly available.
 
-### What is this repository for? ###
+## Idea
+The core of the device is a Raspberry Pi running a Node.js server. The
+control interface is utilizing standard web technologies including HTML5,
+CSS3, and JavasSript (ES6). It features Google's material design and
+no-ui-slider. The Pi communicates to one or more Arduino devices via a
+serial connection. Sensors send their measurements to their connected
+Arduino, which forwards them to the Pi for further processing and storage.
+Based on the incoming measurements and conditions, the Pi can send
+commands to connected Arduinos to activate pumps or other devices. The web
+interface enables the user to control under which conditions the device
+should, e.g., pump fertilizer into the water, activate the heater, or
+water the plants.
 
-* Raspberry Pi 3 is connected to an Arduino Mega, which is connected to several sensors
-* OLD reads and writes sensor data
-* Raspberry runs a nodejs application, which runs a web server and allows communication over the serial channel to an Arduino
-* Version 0.0
+## Features
+- Reading of sensor measurements
+- Definition of optimal, acceptable, and critical ranges for each individual measurement
+- Automatic adjustment of the environment to keep variables in their optimal range
+- Measurement-based control of plugged in devices
+- Time-based control of plugged in devices
+- Manual control of plugged in devices
+- Automatic storage of measurements for future analysis
+- Automatic smoothing of measurements for predictable action
+- Fine-grained control of storage and smoothing functionality
+- Download of stored measurements to USB
+- Upload of settings via USB
 
-### How do I get set up? ###
-
-* Setup node.js by executing the following commands:
+# Setup
+Setup node.js by executing the following commands:
+```sh
 curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 sudo apt-get install -y nodejs
 node -v
 npm install --save express serialport socket.io socket.io-client material-components-web mongodb
+```
 
-* For USB support do
-Linux:
+For USB support:
+
+- Linux:
+```sh
 sudo apt-get install build-essential libudev-dev
 npm install --unsafe-perm usb
+```
  
-Windows:
-install http://zadig.akeo.ie/ USB drivers
-npm install usb
+- Windows:
+  - install http://zadig.akeo.ie/ USB drivers
+  - `npm install usb`
 
-* Update all node.js modules
-npm update
+Update all node.js modules:
+```sh
+npm update --unsafe-perm=true --allow-root
+```
 
-* Use PM2 to automatically run the application on startup
+Use PM2 to automatically run the application on startup:
+```sh
 npm install pm2 -g
 pm2 startup systemd
 pm2 start app.js --watch
 pm2 stop app.js
 pm2 save
+```
 
-* In order to run the service without sudo:
+Run the service without sudo:
+```sh
 sudo apt-get install authbind
 sudo touch /etc/authbind/byport/80
 sudo chown yourusername /etc/authbind/byport/80
 sudo chmod 755 /etc/authbind/byport/80
 authbind --deep pm2 update
+```
 
-And then use authbind --deep pm2 instead of pm2
+And then use `authbind --deep pm2` instead of `pm2`
 
-### Additional information
+# Additional information
 
-* How to enable WiFi on raspberry via SD card
+How to enable WiFi on raspberry via SD card
 source: https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md
-
+```sh
 sudo nano /etc/wpa_supplicant/wpa_supplicant.conf
+```
 add:
+```
 network={
     ssid="testing"
     psk="testingPassword"
 }
+```
 
-* How to get out of kiosk mode
+How to get out of kiosk mode:
+```
 ctrl + W <OR> alt + F4	//closes kiosk
 ctrl + alt + T	//opens terminal
 sudo raspi-config	//open configuration
+```
 
-### Who do I talk to? ###
+# License
 
-* fabian.bolte@web.de
+Distributed under the MIT License. See `LICENSE` for more information.
+
+# Contact
+
+fabian.bolte@web.de
+
+# Acknowledgement
+
+I hereby want to thank Patrick Jahn, Florian Müller, and Hachem Melhem for their initiative and contribution to the O.L.D. project. They not only designed and built a functioning prototype device, but further provided valuable input for the software functionality and interface design.

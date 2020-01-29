@@ -1,0 +1,6 @@
+{
+	"interval": 10,
+    "fileChangeInterval": 3600,
+    "precision": 4,
+	"aggregation": "average"
+}

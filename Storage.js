@@ -136,7 +136,8 @@ const fs = require('fs');
                         break;
 
                     case 'aggregation':
-                        this._options.aggregation = value;
+                        this._options.aggregation = value; // average, median, null
+                        break;
 
                     case '//': // ignore comments
                         break
