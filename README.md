@@ -2,6 +2,8 @@
 
 Optimal Loop Direction was a project with the goal of developing a hydroponics system for private and industrial use. The project is discontinued and the source code is now openly available.
 
+Find the Arduino code under https://github.com/CadanoX/Hydroponics-Arduino
+
 ## Idea
 
 The core of the device is a Raspberry Pi running a Node.js server. The
