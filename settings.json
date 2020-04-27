@@ -1,11 +1,20 @@
 {
   "relay": [
     {
-      "control": "Manual",
+      "control": "PH",
       "controlDir": "+/-",
-      "isActive": false,
+      "isActive": true,
       "manualSwitch": "0",
-      "scales": {},
+      "scales": {
+        "PH": [
+          0,
+          3.13,
+          4.98,
+          6.49,
+          7.64,
+          14
+        ]
+      },
       "times": [
         0,
         0,
@@ -34,7 +43,7 @@
       ]
     },
     {
-      "control": "Manual",
+      "control": "Time",
       "controlDir": "+/-",
       "scales": {},
       "times": [
@@ -55,7 +64,7 @@
         0,
         0,
         0,
-        0,
+        true,
         0,
         0,
         0,
