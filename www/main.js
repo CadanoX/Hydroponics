@@ -50,7 +50,7 @@ function deviceOptionChanged(type, nr, option) {
   const timeButtonContainer = deviceOptionDiv.querySelector(
     ".timeButtonContainer"
   );
-  const optioslidernSlider = deviceOptionDiv.querySelector(".optionSlider");
+  const slider = deviceOptionDiv.querySelector(".optionSlider");
   const deviceOptionDir = document.querySelector(
     "#" + type + "-" + nr + " .optionDirSelection"
   );
@@ -64,7 +64,7 @@ function deviceOptionChanged(type, nr, option) {
     const manualSlider = deviceOptionDiv.querySelector(".manualSlider");
     manualSlider.style.display = "block";
 
-    device.manualSwitch = slider.noUiSlider.get();
+    device.manualSwitch = manualSlider.noUiSlider.get();
   } else if (device.control == "Time") {
     // Hide all controls but time
     manualSwitch.style.display = "none";

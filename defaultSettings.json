@@ -6,14 +6,7 @@
       "isActive": true,
       "manualSwitch": "0",
       "scales": {
-        "PH": [
-          0,
-          3.13,
-          4.98,
-          6.49,
-          7.64,
-          14
-        ]
+        "PH": [0, 3.13, 4.98, 6.49, 7.64, 14]
       },
       "times": [
         0,
@@ -110,14 +103,7 @@
       "control": "Manual",
       "controlDir": "+/-",
       "scales": {
-        "Temp": [
-          0,
-          33,
-          38,
-          47,
-          52,
-          80
-        ]
+        "Temp": [0, 33, 38, 47, 52, 80]
       },
       "times": [
         true,
@@ -153,7 +139,7 @@
       "control": "Manual",
       "controlDir": "-",
       "scales": {},
-      "manualSwitch": "1"
+      "manualSwitch": "0"
     },
     {
       "control": "Manual",

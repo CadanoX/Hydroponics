@@ -39,9 +39,9 @@ class Clock {
 
     // Every full hour, send a signal with the current hour
     if (this._date.getMinutes() == 0 && this._callbackHour)
-      this._callbackHour(date.getHours());
+      this._callbackHour(this._date.getHours());
     if (this._date.getSeconds() == 0 && this._callbackMinute)
-      this._callbackMinute(date.getMinutes());
+      this._callbackMinute(this._date.getMinutes());
     if (this._callbackSecond) this._callbackSecond();
   }
 }

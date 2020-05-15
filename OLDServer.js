@@ -19,6 +19,7 @@ var mountInterval;
 var mountTimer;
 var time = 0;
 var deviceSettingsFile = "settings.json";
+var deviceSettingsDefaultFile = "defaultSettings.json";
 var deviceSettings;
 
 /* Commands are described by a receiver (sensor, pump or relay) and the command to send
@@ -71,14 +72,10 @@ function retrieveSettings(json) {
 
 // Write current settings to JSON file
 function storeSettings() {
-  fs.writeFile(
-    deviceSettingsFile,
-    JSON.stringify(deviceSettings, null, 2),
-    "utf8",
-    (err) => {
-      if (err) console.log("Error storing settings: " + err);
-    }
-  );
+  const json = JSON.stringify(deviceSettings, null, 2);
+  fs.writeFile(deviceSettingsFile, json, "utf8", (err) => {
+    if (err) console.log("Error storing settings: " + err);
+  });
 }
 
 // Adjust UI and send commands to apply new settings
@@ -107,13 +104,15 @@ function applySettings(json) {
 }
 
 // Load stored settings from JSON file
-function loadSettings() {
-  fs.readFile(deviceSettingsFile, "utf8", (err, data) => {
+function loadSettings(file) {
+  fs.readFile(file || deviceSettingsFile, "utf8", (err, data) => {
     if (err) console.log("Error loading settings: " + err);
     else {
       // Decode the response
       try {
-        deviceSettings = JSON.parse(data);
+        // If no settings are stored, load default settings
+        if (data == "") loadSettings(deviceSettingsDefaultFile);
+        else deviceSettings = JSON.parse(data);
       } catch (e) {
         // Byte errors destroyed the format
         console.log(data);
