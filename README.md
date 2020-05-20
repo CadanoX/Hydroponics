@@ -41,14 +41,17 @@ Or via the command line:
 ```sh
 curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 sudo apt-get install -y nodejs
-npm install
 ```
+
+For USB Support run `sudo apt-get install libudev-dev`
+
+Install required node packages via `npm install`
 
 For a first test run `node OLDServer.js` and open `localhost` in the browser.
 
 # Additional information
 
-How to enable WiFi on raspberry via SD card
+## How to enable WiFi on raspberry via SD card
 source: https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md
 
 ```sh
@@ -64,7 +67,7 @@ network={
 }
 ```
 
-For USB support:
+## For USB support:
 
 - Linux:
 

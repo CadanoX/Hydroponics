@@ -33,17 +33,18 @@ function median(array) {
 class Storage {
   constructor(path = "./OLD-data", options = {}) {
     this._opts = {
-      interval: 10000, // write to file every x milliseconds
+      storeInterval: 10000, // write to file every x milliseconds
       fileChangeInterval: 60 * 60 * 1000, // write to new file every x milliseconds
       precision: 4, // floating precision
+      aggregation: Aggregation.NONE,
       ...options, // overwrite default settings with user settings
     };
     this._data = [];
     this._path;
     this._filename;
-    // intervals call functions every x milliseconds
-    this._storeInterval;
-    this._fileChangeInterval;
+    // Timers call functions every x milliseconds
+    this._storeTimer;
+    this._fileChangeTimer;
 
     this.path(path);
     this.options(options);
@@ -73,13 +74,12 @@ class Storage {
           console.log(e);
         }
 
-        if (options) this.options(options);
+        if (options) this._setOptions(options);
       }
     });
   }
 
   // add new data to store it later
-
   add(d) {
     if (!d || typeof d !== "object")
       return console.log(`ERROR: Added data "${d}" is not an object.`);
@@ -119,9 +119,12 @@ class Storage {
 
   // set new interval values for function calls
   _reset() {
-    clearInterval(this._storeInterval);
-    this._storeInterval = setInterval(() => this._store(), this._opts.interval);
-    this._fileChangeInterval = setInterval(
+    clearInterval(this._storeTimer);
+    this._storeTimer = setInterval(
+      () => this._store(),
+      this._opts.storeInterval
+    );
+    this._fileChangeTimer = setInterval(
       this._changeDataFile,
       this._opts.fileChangeInterval
     );
@@ -153,7 +156,7 @@ class Storage {
             console.log("Storage interval must be an integer.");
           else if (value < 1) console.log("Storage interval must be >= 1.");
           else {
-            this._opts.interval = value * 1000;
+            this._opts.storeInterval = value * 1000;
             this._reset();
           }
           break;
@@ -172,7 +175,11 @@ class Storage {
           break;
 
         case "aggregation":
-          this._opts.aggregation = value; // average, median, null
+          if (value == "median") this._opts.aggregation = Aggregation.MEDIAN;
+          else if (value == "average")
+            this._opts.aggregation = Aggregation.AVERAGE;
+          else if (value == "none") this._opts.aggregation = Aggregation.NONE;
+          else console.log(`Aggregation method '${value}' is not defined.`);
           break;
 
         case "//": // ignore comments
@@ -186,14 +193,13 @@ class Storage {
   }
 
   // write the received data to a file
-  // data values can be aggregated by changing the aggregation mdoe
+  // data values can be aggregated by changing the aggregation mode
   _store() {
     if (this._data.length == 0) return;
 
     let timePassed =
       this._data[this._data.length - 1].timestamp - this._data[0].timestamp;
-    let numAggregations = timePassed / this._opts.interval;
-    if (numAggregations < 1) return;
+    if (timePassed < this._opts.storeInterval) return;
 
     let aggregatedData = [];
     let lastStoredIndex = -1;
@@ -210,31 +216,35 @@ class Storage {
       for (var i = 0; i < this._data.length; i++) {
         // check timestamps to split data into intervals
         let newInterval =
-          this._data[i].timestamp - aggregate.timestamp >= this._opts.interval;
+          this._data[i].timestamp - aggregate.timestamp >=
+          this._opts.storeInterval;
 
         if (newInterval) {
           // calculate average for each measure
+          // the measure is now the sum of all measures
           for (const measure in aggregate.data)
-            aggregate.data[measure] =
-              aggregate.data[measure] / aggregate.num[measure];
+            aggregate.data[measure] /= aggregate.num[measure];
 
           aggregatedData.push(aggregate);
 
           // start new aggregate
-          aggregate.timestamp = this._data[i].timestamp;
-          aggregate.data = {};
-          aggregate.num = {};
+          aggregate = {
+            timestamp: this._data[i].timestamp,
+            data: {},
+            num: {},
+          };
           lastStoredIndex = i - 1;
         }
 
         // sum up the values of successive timesteps for each measurement individually
         for (const [measure, value] of Object.entries(this._data[i].data)) {
-          if (!!aggregate.data[measure]) {
+          if (!aggregate.data[measure]) {
+            // first value
+            aggregate.data[measure] = Number.parseFloat(value);
+            aggregate.num[measure] = 1;
+          } else {
             aggregate.data[measure] += Number.parseFloat(value);
             aggregate.num[measure]++;
-          } else {
-            aggregate.data[measure] = Number.parseFloat(value);
-            aggregate.num[measure] = 0;
           }
         }
 
@@ -250,18 +260,24 @@ class Storage {
       for (var i = 0; i < this._data.length; i++) {
         // check timestamps to split data into intervals
         let newInterval =
-          this._data[i].timestamp - aggregate.timestamp >= this._opts.interval;
+          this._data[i].timestamp - aggregate.timestamp >=
+          this._opts.storeInterval;
 
         if (newInterval) {
+          // the value is now an array of values
           // replace data values by their median
           for (const measure in aggregate.data) {
-            aggregatedData.data[measure] = median(aggregatedData.data[measure]);
+            aggregate.data[measure] = median(aggregate.data[measure]);
           }
+
           // store median
           aggregatedData.push(aggregate);
+
           // start new aggregate
-          aggregate.timestamp = this._data[i].timestamp;
-          aggregate.data = {};
+          aggregate = {
+            timestamp: this._data[i].timestamp,
+            data: {},
+          };
           lastStoredIndex = i - 1;
         }
 
@@ -274,7 +290,7 @@ class Storage {
         // delete stored data from memory
         this._data.splice(0, lastStoredIndex + 1);
       }
-    } // don't aggregate
+    } // do not aggregate
     else if (this._opts.aggregation == Aggregation.NONE) {
       aggregatedData = this._data.splice(0, this._data.length);
     }
@@ -283,6 +299,8 @@ class Storage {
   }
 
   _writeToFile(data) {
+    if (!data || data.length == 0) return;
+
     const filepath = this._path + "/" + this._filename;
     let fd;
     try {
@@ -291,11 +309,10 @@ class Storage {
       // go through all timesteps
       for (var i = 0; i < data.length; i++) {
         // go through all measurements
-        for (var m in data[i].data) {
-          let value = Number.parseFloat(data[i].data[m]).toFixed(
-            this._opts.precision
-          );
-          const data = `${data[i].timestamp.toLocaleString()},${m},${value}\n`;
+        const timestamp = data[i].timestamp.toLocaleString();
+        for (let [m, v] of Object.entries(data[i].data)) {
+          const value = Number.parseFloat(v).toFixed(this._opts.precision);
+          const data = `${timestamp},${m},${value}\n`;
           fs.appendFileSync(fd, data, "utf8");
         }
       }
