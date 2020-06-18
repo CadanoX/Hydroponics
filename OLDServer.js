@@ -104,15 +104,18 @@ function applySettings(json) {
 }
 
 // Load stored settings from JSON file
-function loadSettings(file) {
-  fs.readFile(file || deviceSettingsFile, "utf8", (err, data) => {
+function loadSettings() {
+  // if no settings are stored, use default
+  let file = fs.existsSync(deviceSettingsFile)
+    ? deviceSettingsFile
+    : deviceSettingsDefaultFile;
+
+  fs.readFile(file, "utf8", (err, data) => {
     if (err) console.log("Error loading settings: " + err);
     else {
       // Decode the response
       try {
-        // If no settings are stored, load default settings
-        if (data == "") loadSettings(deviceSettingsDefaultFile);
-        else deviceSettings = JSON.parse(data);
+        deviceSettings = JSON.parse(data);
       } catch (e) {
         // Byte errors destroyed the format
         console.log(data);
