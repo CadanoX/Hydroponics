@@ -9,7 +9,7 @@
     "acorn": "^7.4.0",
     "drivelist": "^6.4.6",
     "eslint": "^5.16.0",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "lodash": "^4.17.21",
     "material-components-web": "^0.31.0",
     "mongod": "^2.0.0",
